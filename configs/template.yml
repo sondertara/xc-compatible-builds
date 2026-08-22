@@ -5,20 +5,25 @@ app_id: myapp
 upstream_repo: owner/repo        # 必填
 display_name: MyApp              # 可选，Release 标题展示名
 
-# 默认 debian:bullseye —— glibc 2.31 与麒麟桌面 V10 精确匹配，
-# 且 LTS 源自带 libwebkit2gtk-4.1-dev (2.50.x)，Tauri 2 可直接构建。
-# 非 Tauri 项目同样适用。
-container_image: "debian:bullseye"
+# 构建镜像（glibc 2.31 基底）：
+# - Tauri 2 应用：必须用定制镜像（glibc 2.31 公共源无 webkit2gtk-4.1，
+#   已实测确认）。先在 Actions 手动跑一次 "Build Compat Image"
+#   （约 2~3h/架构，仅需一次），然后填：
+#   container_image:      ghcr.io/sondertara/xc-compat-tauri2:amd64
+#   container_image_arm64: ghcr.io/sondertara/xc-compat-tauri2:aarch64
+# - 非 Tauri / 无 webkit 依赖：直接 debian:bullseye，两个都填它或省略 arm64
+container_image: "ghcr.io/sondertara/xc-compat-tauri2:amd64"
+container_image_arm64: "ghcr.io/sondertara/xc-compat-tauri2:aarch64"
 
 # 工具链版本（默认与 dbx 官方对齐）
 node_version: "22"
 pnpm_version: "10.27.0"
 rust_version: "1.97.1"
 
-# apt 依赖（Debian 包名；appindicator 是 ayatana 变体）
+# apt 依赖（webkit2gtk-4.1 已内置在定制镜像中，勿重复安装）
 build_deps: >
-  libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev
-  librsvg2-dev libxdo-dev patchelf libssl-dev xdg-utils libsecret-1-dev
+  libayatana-appindicator3-dev librsvg2-dev libxdo-dev
+  patchelf libssl-dev xdg-utils libsecret-1-dev
 
 # 命令模板，占位符：{target} → rust triple，{version} → 版本号
 install_command: pnpm install --frozen-lockfile

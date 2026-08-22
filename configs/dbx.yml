@@ -2,20 +2,24 @@ app_id: dbx
 upstream_repo: t8y2/dbx
 display_name: DBX
 
-# Debian 11 bullseye：glibc 2.31（= 麒麟桌面 V10），且 LTS 源提供
-# libwebkit2gtk-4.1-dev (2.50.x)，满足 Tauri 2 / wry 的 >= 2.40 要求。
-# 无需任何定制镜像，直接用公开镜像。
-container_image: "debian:bullseye"
+# !! 前置条件 !!
+# Tauri 2 (wry) 需要 webkit2gtk-4.1 (>=2.40)，但 glibc 2.31 的公共源
+# (bullseye/focal main+security) 均只有 4.0 API —— 已实测确认。
+# 必须先在 Actions 里手动跑一次 "Build Compat Image" 工作流
+# （构建 debian:bullseye + 源码 webkit2gtk-2.40.6 镜像，约 2~3h/架构，仅需一次），
+# 产物在 ghcr.io/sondertara/xc-compat-tauri2:{amd64,aarch64}
+container_image: "ghcr.io/sondertara/xc-compat-tauri2:amd64"
+container_image_arm64: "ghcr.io/sondertara/xc-compat-tauri2:aarch64"
 
 node_version: "22"
 pnpm_version: "10.27.0"
 # 与上游官方 release.yml 一致（1.88 只是 MSRV，会编译失败）
 rust_version: "1.97.1"
 
-# Debian 包名（注意：appindicator 用 ayatana 变体；webkit 4.1 直接 apt 装）
+# webkit2gtk-4.1 及其编译依赖已内置在定制镜像中，这里只装轻量运行/链接依赖
 build_deps: >
-  libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev
-  librsvg2-dev libxdo-dev patchelf libssl-dev xdg-utils libsecret-1-dev
+  libayatana-appindicator3-dev librsvg2-dev libxdo-dev
+  patchelf libssl-dev xdg-utils libsecret-1-dev
 
 # {target} 会替换为 x86_64-unknown-linux-gnu / aarch64-unknown-linux-gnu
 install_command: pnpm install --frozen-lockfile

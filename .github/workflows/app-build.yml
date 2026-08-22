@@ -29,6 +29,7 @@ jobs:
       upstream_repo: ${{ steps.cfg.outputs.upstream_repo }}
       display_name: ${{ steps.cfg.outputs.display_name }}
       container_image: ${{ steps.cfg.outputs.container_image }}
+      container_image_arm64: ${{ steps.cfg.outputs.container_image_arm64 }}
       node_version: ${{ steps.cfg.outputs.node_version }}
       pnpm_version: ${{ steps.cfg.outputs.pnpm_version }}
       rust_version: ${{ steps.cfg.outputs.rust_version }}
@@ -61,16 +62,20 @@ jobs:
               "app_id": app_id,
               "display_name": "",
               "container_image": "debian:bullseye",
+              "container_image_arm64": "",
               "node_version": "22",
               "pnpm_version": "10.27.0",
               "rust_version": "1.97.1",
-              "build_deps": "libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev patchelf libssl-dev xdg-utils libsecret-1-dev",
+              "build_deps": "libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev patchelf libssl-dev xdg-utils libsecret-1-dev",
               "install_command": "pnpm install --frozen-lockfile",
               "build_command": "pnpm tauri build --bundles appimage --target {target}",
               "artifact_name": "{app}_{version}_{arch}.AppImage",
           }
           out = {k: str(cfg.get(k, d)) for k, d in defaults.items()}
           out["upstream_repo"] = cfg["upstream_repo"]
+          # arm64 镜像未配置时回落到 container_image
+          if not out["container_image_arm64"]:
+              out["container_image_arm64"] = out["container_image"]
           # build_deps 可能是 YAML 折叠多行，压平
           out["build_deps"] = " ".join(out["build_deps"].split())
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
@@ -95,5 +100,6 @@ jobs:
       install_command: ${{ needs.load-config.outputs.install_command }}
       build_command: ${{ needs.load-config.outputs.build_command }}
       artifact_name: ${{ needs.load-config.outputs.artifact_name }}
+      container_image_arm64: ${{ needs.load-config.outputs.container_image_arm64 }}
       display_name: ${{ needs.load-config.outputs.display_name }}
     secrets: inherit

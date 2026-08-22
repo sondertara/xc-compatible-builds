@@ -21,10 +21,15 @@ on:
         type: string
         default: ""
       container_image:
-        description: "构建容器镜像（默认 debian:bullseye，glibc 2.31 + webkit2gtk-4.1）"
+        description: "构建容器镜像（x64/amd64 用，glibc 2.31 基底）"
         required: false
         type: string
         default: "debian:bullseye"
+      container_image_arm64:
+        description: "构建容器镜像（arm64 用，默认同 container_image）"
+        required: false
+        type: string
+        default: ""
       node_version:
         required: false
         type: string
@@ -154,13 +159,14 @@ jobs:
             appimage_arch: aarch64
     runs-on: ${{ matrix.runner }}
     container:
-      image: ${{ inputs.container_image }}
+      # arm64 独立镜像（ghcr 分架构 tag），未配置时与 x64 相同
+      image: ${{ matrix.arch == 'arm64' && (inputs.container_image_arm64 || inputs.container_image) || inputs.container_image }}
       options: --privileged
     env:
       DEBIAN_FRONTEND: noninteractive
 
     steps:
-      # 注意：容器内不装 gh（用不到）；webkit 等依赖由 apt 直接安装
+      # 注意：容器内不装 gh（用不到）；webkit 等重依赖由定制镜像提供
       - name: Install base tools
         run: |
           apt-get update -qq
@@ -172,17 +178,18 @@ jobs:
           echo "glibc: $(ldd --version | head -1)"
           echo "OS: $(grep PRETTY_NAME /etc/os-release)"
 
-      - name: Preflight — glibc <= 2.31 and webkit2gtk-4.1 >= 2.40
+      - name: Preflight — glibc <= 2.31, webkit2gtk-4.1 >= 2.40 (if Tauri)
         run: |
           set -euo pipefail
           # 1) glibc 上限：产物必须兼容麒麟桌面 V10 (glibc 2.31)
           GLIBC_VER=$(ldd --version | head -1 | grep -oE '[0-9]+\.[0-9]+$')
           echo "Container glibc: $GLIBC_VER"
           if [ "$(printf "2.31\n$GLIBC_VER" | sort -V | tail -1)" != "2.31" ]; then
-            echo "::error::Container glibc $GLIBC_VER > 2.31 — the AppImage would NOT run on Kylin V10. Use debian:bullseye."
+            echo "::error::Container glibc $GLIBC_VER > 2.31 — the AppImage would NOT run on Kylin V10. Use a glibc 2.31 base (debian:bullseye)."
             exit 1
           fi
-          # 2) webkit2gtk-4.1 必须存在且 >= 2.40（wry 的最低要求）
+          # 2) webkit2gtk-4.1（Tauri 2/wry 需要 >= 2.40；glibc 2.31 公共源均无此包，
+          #    必须使用 build-image.yml 构建的 ghcr 定制镜像）
           if pkg-config --exists webkit2gtk-4.1; then
             WK_VER=$(pkg-config --modversion webkit2gtk-4.1)
             echo "webkit2gtk-4.1: $WK_VER"
@@ -191,8 +198,11 @@ jobs:
               exit 1
             fi
           else
-            echo "::error::webkit2gtk-4.1 not found in ${{ inputs.container_image }}. Add libwebkit2gtk-4.1-dev to build_deps."
-            exit 1
+            echo "webkit2gtk-4.1 NOT found in this image."
+            echo "For Tauri 2 apps this is REQUIRED — no glibc-2.31 distro ships it (verified: bullseye/focal main+security only have the 4.0 API)."
+            echo "Fix: run the 'Build Compat Image' workflow once, then set container_image to"
+            echo "     ghcr.io/${{ github.repository_owner }}/xc-compat-tauri2:amd64 (+ :aarch64 for arm64) in configs/<app>.yml."
+            echo "Non-Tauri apps without webkit dependency can ignore this."
           fi
           echo "✓ Preflight passed"
 
