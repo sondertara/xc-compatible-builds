@@ -52,7 +52,7 @@ RUN curl -fsSL https://download.gnome.org/sources/glib/2.72/glib-2.72.4.tar.xz |
 # ---- 2. libsoup3（webkit 4.1 API 依赖，bullseye 无此包；3.2 系列最高 3.2.3）----
 RUN curl -fsSL https://download.gnome.org/sources/libsoup/3.2/libsoup-3.2.3.tar.xz | tar xJ -C /tmp \
     && cd /tmp/libsoup-3.2.3 \
-    && meson setup _build --buildtype=release --libdir=lib -Dtests=false -Dvapi=disabled -Dgssapi=disabled -Ddocs=disabled \
+    && meson setup _build --buildtype=release --libdir=lib -Dtests=false -Dvapi=disabled -Dgssapi=disabled -Ddocs=disabled -Dtls_check=false \
     && ninja -C _build install \
     && ldconfig && rm -rf /tmp/libsoup-3.2.3 \
     && pkg-config --modversion libsoup-3.0 \
