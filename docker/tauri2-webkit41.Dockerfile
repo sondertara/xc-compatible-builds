@@ -44,17 +44,17 @@ RUN curl -fsSL https://download.gnome.org/sources/glib/2.72/glib-2.72.4.tar.xz |
     && ninja -C _build install \
     && ldconfig && rm -rf /tmp/glib-2.72.4
 
-# ---- 2. libsoup3（webkit 4.1 API 依赖，bullseye 无此包）----
-RUN curl -fsSL https://download.gnome.org/sources/libsoup/3.2/libsoup-3.2.5.tar.xz | tar xJ -C /tmp \
-    && cd /tmp/libsoup-3.2.5 \
+# ---- 2. libsoup3（webkit 4.1 API 依赖，bullseye 无此包；3.2 系列最高 3.2.3）----
+RUN curl -fsSL https://download.gnome.org/sources/libsoup/3.2/libsoup-3.2.3.tar.xz | tar xJ -C /tmp \
+    && cd /tmp/libsoup-3.2.3 \
     && meson setup _build --buildtype=release -Dtests=false -Dvapi=disabled -Dgssapi=disabled -Ddocs=disabled \
     && ninja -C _build install \
-    && ldconfig && rm -rf /tmp/libsoup-3.2.5
+    && ldconfig && rm -rf /tmp/libsoup-3.2.3
 
-# ---- 3. WebKitGTK 2.40.6（提供 webkit2gtk-4.1 API）----
+# ---- 3. WebKitGTK 2.40.5（提供 webkit2gtk-4.1 API；2.40 系列最高小版本）----
 # 关闭不必要的组件控制编译时长与依赖面
-RUN curl -fsSL https://webkitgtk.org/releases/webkitgtk-2.40.6.tar.xz | tar xJ -C /tmp \
-    && cd /tmp/webkitgtk-2.40.6 \
+RUN curl -fsSL https://webkitgtk.org/releases/webkitgtk-2.40.5.tar.xz | tar xJ -C /tmp \
+    && cd /tmp/webkitgtk-2.40.5 \
     && cmake -B _build -GNinja -DCMAKE_BUILD_TYPE=Release -DPORT=GTK \
        -DCMAKE_INSTALL_PREFIX=/usr/local \
        -DENABLE_DOCUMENTATION=OFF \
