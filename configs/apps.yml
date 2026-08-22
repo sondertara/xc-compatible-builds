@@ -1,0 +1,14 @@
+# 注册表：所有需要兼容构建的软件
+# 新增软件只需：1) 在 configs/ 下创建 <id>.yml  2) 在此注册
+# 定时任务会遍历此列表，逐个检查上游最新 Release 并按需构建
+
+apps:
+  - id: dbx
+    config: configs/dbx.yml
+    # 可选：是否启用定时自动跟踪（默认 true）
+    auto_track: true
+
+  # 示例：新增软件时取消注释并修改
+  # - id: myapp
+  #   config: configs/myapp.yml
+  #   auto_track: true

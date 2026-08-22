@@ -1,0 +1,28 @@
+# 新软件配置模板 — 复制为 configs/<app-id>.yml 后按注释填写
+# 填好后：手动触发 App Build 填 <app-id>，或在 apps.yml 注册参与定时批量构建
+
+app_id: myapp
+upstream_repo: owner/repo        # 必填
+display_name: MyApp              # 可选，Release 标题展示名
+
+# 默认 debian:bullseye —— glibc 2.31 与麒麟桌面 V10 精确匹配，
+# 且 LTS 源自带 libwebkit2gtk-4.1-dev (2.50.x)，Tauri 2 可直接构建。
+# 非 Tauri 项目同样适用。
+container_image: "debian:bullseye"
+
+# 工具链版本（默认与 dbx 官方对齐）
+node_version: "22"
+pnpm_version: "10.27.0"
+rust_version: "1.97.1"
+
+# apt 依赖（Debian 包名；appindicator 是 ayatana 变体）
+build_deps: >
+  libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev
+  librsvg2-dev libxdo-dev patchelf libssl-dev xdg-utils libsecret-1-dev
+
+# 命令模板，占位符：{target} → rust triple，{version} → 版本号
+install_command: pnpm install --frozen-lockfile
+build_command: pnpm tauri build --bundles appimage --target {target}
+
+# 产物命名模板，占位符：{app} {version} {arch}（arch = amd64 / aarch64）
+artifact_name: "{app}_{version}_{arch}.AppImage"

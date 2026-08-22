@@ -1,0 +1,128 @@
+name: Compat Build — All Apps (glibc 2.31)
+
+# 批量编排：遍历 configs/apps.yml，检查各软件上游最新 Release，
+# 对有新版的软件逐个触发 App Build 工作流。
+#
+# 设计说明（为什么不用 matrix 直接 uses reusable）：
+# GitHub Actions 限制 —— 调用 reusable workflow (uses:) 的 job 不能定义 strategy.matrix，
+# 因此采用 discover → gh workflow run 逐个触发 App Build 的模式，
+# 各软件构建天然并行、失败互不影响。
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "指定软件 id（留空=all 遍历 apps.yml）"
+        required: false
+        default: "all"
+      version:
+        description: "指定版本 tag（仅配合单 app 使用，留空跟踪上游最新）"
+        required: false
+        default: ""
+  schedule:
+    - cron: "0 2 * * 1"  # 每周一 02:00 UTC 批量检查上游新版本
+
+permissions:
+  actions: write   # 触发 App Build
+  contents: read   # 读取 configs 和 release 列表
+
+jobs:
+  discover:
+    name: Discover apps needing build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Resolve pending builds
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_APP: ${{ inputs.app }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          pip3 install --quiet pyyaml 2>/dev/null || pip3 install --break-system-packages --quiet pyyaml || true
+          python3 << 'PY'
+          import os, yaml, pathlib, subprocess, json
+
+          def gh(*args):
+              return subprocess.run(["gh", *args], capture_output=True, text=True)
+
+          apps = (yaml.safe_load(pathlib.Path("configs/apps.yml").read_text()) or {}).get("apps", [])
+          input_app = os.environ.get("INPUT_APP", "").strip()
+          input_version = os.environ.get("INPUT_VERSION", "").strip()
+          event = os.environ.get("GITHUB_EVENT_NAME", "")
+
+          if input_app and input_app != "all":
+              apps = [a for a in apps if a.get("id") == input_app]
+              if not apps:
+                  print(f"::error::app '{input_app}' not registered in configs/apps.yml")
+                  raise SystemExit(1)
+          elif event == "schedule":
+              # 定时任务只处理 auto_track 的软件
+              apps = [a for a in apps if a.get("auto_track", True)]
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          pending = []
+          for app in apps:
+              app_id = app["id"]
+              cfg = yaml.safe_load(pathlib.Path(app.get("config", f"configs/{app_id}.yml")).read_text()) or {}
+              upstream = cfg.get("upstream_repo")
+              if not upstream:
+                  print(f"::warning::{app_id}: upstream_repo missing, skipped")
+                  continue
+
+              # 指定版本 → 直接排队（App Build 内部会强制重建）
+              if input_version and input_app == app_id:
+                  pending.append((app_id, input_version))
+                  continue
+
+              # 查上游最新 release
+              r = gh("api", f"repos/{upstream}/releases/latest", "--jq", ".tag_name")
+              if r.returncode != 0 or not r.stdout.strip():
+                  print(f"::warning::{app_id}: cannot fetch latest release from {upstream} ({r.stderr.strip()}), skipped")
+                  continue
+              tag = r.stdout.strip()
+
+              # 本仓库是否已发布（release tag 带 app 前缀）
+              release_tag = f"{app_id}-{tag}" if tag.startswith("v") else f"{app_id}-v{tag}"
+              r2 = gh("release", "view", release_tag, "--repo", repo)
+              if r2.returncode == 0:
+                  assets = gh("release", "view", release_tag, "--repo", repo, "--json", "assets", "--jq", ".assets[].name")
+                  if "AppImage" in (assets.stdout or ""):
+                      print(f"  = {app_id}: {tag} already built, skip")
+                      continue
+              pending.append((app_id, tag))
+              print(f"  + {app_id}: {tag} needs build")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write("count=" + str(len(pending)) + "\n")
+
+          # 写到文件供后续步骤逐个触发（避免 outputs 多行转义问题）
+          with open("pending.txt", "w") as f:
+              for app_id, tag in pending:
+                  f.write(f"{app_id} {tag}\n")
+          print(f"Pending builds: {len(pending)}")
+          PY
+
+      - name: Trigger App Build per pending app
+        if: steps.resolve.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          while read -r app_id tag; do
+            [ -z "$app_id" ] && continue
+            echo "Triggering App Build for $app_id @ $tag ..."
+            gh workflow run app-build.yml \
+              --repo "${GITHUB_REPOSITORY}" \
+              --ref "${GITHUB_REF_NAME}" \
+              -f app_id="$app_id" \
+              -f version="$tag"
+            sleep 5  # 避免触发过快
+          done < pending.txt
+          echo "All triggered. Monitor each run in Actions → App Build."
+
+      - name: Nothing to do
+        if: steps.resolve.outputs.count == '0'
+        run: echo "All apps up to date. No build needed."

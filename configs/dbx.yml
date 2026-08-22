@@ -1,0 +1,25 @@
+app_id: dbx
+upstream_repo: t8y2/dbx
+display_name: DBX
+
+# Debian 11 bullseye：glibc 2.31（= 麒麟桌面 V10），且 LTS 源提供
+# libwebkit2gtk-4.1-dev (2.50.x)，满足 Tauri 2 / wry 的 >= 2.40 要求。
+# 无需任何定制镜像，直接用公开镜像。
+container_image: "debian:bullseye"
+
+node_version: "22"
+pnpm_version: "10.27.0"
+# 与上游官方 release.yml 一致（1.88 只是 MSRV，会编译失败）
+rust_version: "1.97.1"
+
+# Debian 包名（注意：appindicator 用 ayatana 变体；webkit 4.1 直接 apt 装）
+build_deps: >
+  libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev
+  librsvg2-dev libxdo-dev patchelf libssl-dev xdg-utils libsecret-1-dev
+
+# {target} 会替换为 x86_64-unknown-linux-gnu / aarch64-unknown-linux-gnu
+install_command: pnpm install --frozen-lockfile
+build_command: pnpm tauri build --bundles appimage --target {target}
+
+# 与官方命名一致：DBX_0.5.91_amd64.AppImage / DBX_0.5.91_aarch64.AppImage
+artifact_name: "DBX_{version}_{arch}.AppImage"

@@ -1,0 +1,99 @@
+name: App Build (single app, glibc 2.31)
+
+# 通用单软件构建入口：
+# - 手动触发：Actions → App Build → 填 app_id（必填）+ version（可选）
+# - 被 compat-build.yml 批量调度触发（通过 gh workflow run）
+# 配置读取 configs/<app_id>.yml，再调用 reusable-appimage.yml
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_id:
+        description: "软件 id（对应 configs/<id>.yml，如 dbx）"
+        required: true
+        type: string
+      version:
+        description: "指定版本 tag（如 v0.5.91），留空跟踪上游最新 Release"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  load-config:
+    name: Load config (${{ inputs.app_id }})
+    runs-on: ubuntu-latest
+    outputs:
+      app_id: ${{ steps.cfg.outputs.app_id }}
+      upstream_repo: ${{ steps.cfg.outputs.upstream_repo }}
+      display_name: ${{ steps.cfg.outputs.display_name }}
+      container_image: ${{ steps.cfg.outputs.container_image }}
+      node_version: ${{ steps.cfg.outputs.node_version }}
+      pnpm_version: ${{ steps.cfg.outputs.pnpm_version }}
+      rust_version: ${{ steps.cfg.outputs.rust_version }}
+      build_deps: ${{ steps.cfg.outputs.build_deps }}
+      install_command: ${{ steps.cfg.outputs.install_command }}
+      build_command: ${{ steps.cfg.outputs.build_command }}
+      artifact_name: ${{ steps.cfg.outputs.artifact_name }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Parse configs/${{ inputs.app_id }}.yml
+        id: cfg
+        env:
+          APP_ID: ${{ inputs.app_id }}
+        run: |
+          set -euo pipefail
+          pip3 install --quiet pyyaml 2>/dev/null || pip3 install --break-system-packages --quiet pyyaml || true
+          python3 << 'PY'
+          import os, yaml, pathlib
+          app_id = os.environ["APP_ID"].strip()
+          cfg_file = pathlib.Path(f"configs/{app_id}.yml")
+          if not cfg_file.exists():
+              print(f"::error::configs/{app_id}.yml not found. Copy configs/template.yml first.")
+              raise SystemExit(1)
+          cfg = yaml.safe_load(cfg_file.read_text()) or {}
+          if not cfg.get("upstream_repo"):
+              print(f"::error::upstream_repo missing in configs/{app_id}.yml")
+              raise SystemExit(1)
+          defaults = {
+              "app_id": app_id,
+              "display_name": "",
+              "container_image": "debian:bullseye",
+              "node_version": "22",
+              "pnpm_version": "10.27.0",
+              "rust_version": "1.97.1",
+              "build_deps": "libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev patchelf libssl-dev xdg-utils libsecret-1-dev",
+              "install_command": "pnpm install --frozen-lockfile",
+              "build_command": "pnpm tauri build --bundles appimage --target {target}",
+              "artifact_name": "{app}_{version}_{arch}.AppImage",
+          }
+          out = {k: str(cfg.get(k, d)) for k, d in defaults.items()}
+          out["upstream_repo"] = cfg["upstream_repo"]
+          # build_deps 可能是 YAML 折叠多行，压平
+          out["build_deps"] = " ".join(out["build_deps"].split())
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              for k, v in out.items():
+                  f.write(f"{k}={v}\n")
+          print(f"Config loaded: {out}")
+          PY
+
+  build:
+    name: Build
+    needs: load-config
+    uses: ./.github/workflows/reusable-appimage.yml
+    with:
+      app_id: ${{ needs.load-config.outputs.app_id }}
+      upstream_repo: ${{ needs.load-config.outputs.upstream_repo }}
+      version: ${{ inputs.version }}
+      container_image: ${{ needs.load-config.outputs.container_image }}
+      node_version: ${{ needs.load-config.outputs.node_version }}
+      pnpm_version: ${{ needs.load-config.outputs.pnpm_version }}
+      rust_version: ${{ needs.load-config.outputs.rust_version }}
+      build_deps: ${{ needs.load-config.outputs.build_deps }}
+      install_command: ${{ needs.load-config.outputs.install_command }}
+      build_command: ${{ needs.load-config.outputs.build_command }}
+      artifact_name: ${{ needs.load-config.outputs.artifact_name }}
+      display_name: ${{ needs.load-config.outputs.display_name }}
+    secrets: inherit

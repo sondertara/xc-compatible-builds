@@ -1,0 +1,349 @@
+name: Reusable — AppImage Compat Build (glibc 2.31)
+
+# 可复用工作流：被 app-build.yml 调用，也可被外部仓库 workflow_call 调用
+# 核心逻辑：debian:bullseye (glibc 2.31) 容器内重新编译，产物兼容麒麟桌面 V10。
+# bullseye 的 LTS 源提供 libwebkit2gtk-4.1-dev (2.50.x)，满足 Tauri 2 / wry (>=2.40)。
+
+on:
+  workflow_call:
+    inputs:
+      app_id:
+        description: "软件标识（用于产物命名 / Release tag 前缀）"
+        required: true
+        type: string
+      upstream_repo:
+        description: "上游仓库 owner/repo"
+        required: true
+        type: string
+      version:
+        description: "指定版本 tag（如 v0.5.91），留空则自动跟踪上游最新 Release"
+        required: false
+        type: string
+        default: ""
+      container_image:
+        description: "构建容器镜像（默认 debian:bullseye，glibc 2.31 + webkit2gtk-4.1）"
+        required: false
+        type: string
+        default: "debian:bullseye"
+      node_version:
+        required: false
+        type: string
+        default: "22"
+      pnpm_version:
+        required: false
+        type: string
+        default: "10.27.0"
+      # 默认与上游 dbx release.yml 的 1.97.1 对齐（1.88 只是 MSRV，编译 lockfile 会失败）
+      rust_version:
+        required: false
+        type: string
+        default: "1.97.1"
+      build_deps:
+        required: false
+        type: string
+        default: "libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev patchelf libssl-dev xdg-utils libsecret-1-dev"
+      # 安装命令模板，支持 {target} 占位符
+      install_command:
+        required: false
+        type: string
+        default: "pnpm install --frozen-lockfile"
+      # 构建命令模板，{target} 会被替换为 rust target，{version} 为版本号
+      build_command:
+        required: false
+        type: string
+        default: "pnpm tauri build --bundles appimage --target {target}"
+      artifact_name:
+        required: false
+        type: string
+        default: "{app}_{version}_{arch}.AppImage"
+      display_name:
+        required: false
+        type: string
+        default: ""
+    outputs:
+      tag:
+        value: ${{ jobs.resolve.outputs.release_tag }}
+      version:
+        value: ${{ jobs.resolve.outputs.version }}
+      skipped:
+        value: ${{ jobs.resolve.outputs.skipped }}
+
+permissions:
+  contents: write
+
+env:
+  CARGO_INCREMENTAL: "0"
+  RUSTC_WRAPPER: sccache
+  # 容器内无 FUSE 时 linuxdeploy 也能正常打包
+  APPIMAGE_EXTRACT_AND_RUN: "1"
+
+jobs:
+  resolve:
+    name: Resolve version (${{ inputs.app_id }})
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.resolve.outputs.tag }}
+      version: ${{ steps.resolve.outputs.version }}
+      release_tag: ${{ steps.resolve.outputs.release_tag }}
+      skipped: ${{ steps.check.outputs.skipped }}
+    steps:
+      - name: Resolve target tag
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_VERSION: ${{ inputs.version }}
+          UPSTREAM_REPO: ${{ inputs.upstream_repo }}
+          APP_ID: ${{ inputs.app_id }}
+        run: |
+          set -euo pipefail
+          if [ -n "$INPUT_VERSION" ]; then
+            TAG="$INPUT_VERSION"
+          else
+            echo "Fetching latest release from $UPSTREAM_REPO ..."
+            TAG=$(gh api "repos/$UPSTREAM_REPO/releases/latest" --jq .tag_name)
+            if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+              echo "::error::Failed to fetch latest release tag from $UPSTREAM_REPO"
+              exit 1
+            fi
+          fi
+          [[ "$TAG" =~ ^v ]] || TAG="v$TAG"
+          VERSION="${TAG#v}"
+          # Release tag 加 app 前缀，避免不同软件上游 tag 重名时互相覆盖
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "release_tag=${APP_ID}-${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Resolved: upstream=$TAG, release=${APP_ID}-${TAG}"
+
+      - name: Check if already built
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
+        run: |
+          set -euo pipefail
+          SKIPPED=false
+          if gh release view "$RELEASE_TAG" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            if gh release view "$RELEASE_TAG" --repo "${GITHUB_REPOSITORY}" \
+                --json assets --jq '.assets[].name' | grep -qi "AppImage"; then
+              echo "Release $RELEASE_TAG already has AppImage assets"
+              SKIPPED=true
+            fi
+          fi
+          # 手动指定版本时强制重建
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "Explicit version specified, force rebuild"
+            SKIPPED=false
+          fi
+          echo "skipped=$SKIPPED" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ inputs.app_id }} (${{ matrix.arch }})
+    needs: resolve
+    if: needs.resolve.outputs.skipped != 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            target: x86_64-unknown-linux-gnu
+            runner: ubuntu-22.04
+            appimage_arch: amd64
+          - arch: arm64
+            target: aarch64-unknown-linux-gnu
+            runner: ubuntu-24.04-arm
+            appimage_arch: aarch64
+    runs-on: ${{ matrix.runner }}
+    container:
+      image: ${{ inputs.container_image }}
+      options: --privileged
+    env:
+      DEBIAN_FRONTEND: noninteractive
+
+    steps:
+      # 注意：容器内不装 gh（用不到）；webkit 等依赖由 apt 直接安装
+      - name: Install base tools
+        run: |
+          apt-get update -qq
+          apt-get install -y --no-install-recommends \
+            ca-certificates curl wget git sudo \
+            build-essential pkg-config file locales tzdata \
+            ${{ inputs.build_deps }}
+          locale-gen en_US.UTF-8 2>/dev/null || true
+          echo "glibc: $(ldd --version | head -1)"
+          echo "OS: $(grep PRETTY_NAME /etc/os-release)"
+
+      - name: Preflight — glibc <= 2.31 and webkit2gtk-4.1 >= 2.40
+        run: |
+          set -euo pipefail
+          # 1) glibc 上限：产物必须兼容麒麟桌面 V10 (glibc 2.31)
+          GLIBC_VER=$(ldd --version | head -1 | grep -oE '[0-9]+\.[0-9]+$')
+          echo "Container glibc: $GLIBC_VER"
+          if [ "$(printf "2.31\n$GLIBC_VER" | sort -V | tail -1)" != "2.31" ]; then
+            echo "::error::Container glibc $GLIBC_VER > 2.31 — the AppImage would NOT run on Kylin V10. Use debian:bullseye."
+            exit 1
+          fi
+          # 2) webkit2gtk-4.1 必须存在且 >= 2.40（wry 的最低要求）
+          if pkg-config --exists webkit2gtk-4.1; then
+            WK_VER=$(pkg-config --modversion webkit2gtk-4.1)
+            echo "webkit2gtk-4.1: $WK_VER"
+            if [ "$(printf "2.40\n$WK_VER" | sort -V | tail -1)" != "$WK_VER" ]; then
+              echo "::error::webkit2gtk-4.1 $WK_VER < 2.40 (required by wry/Tauri 2)."
+              exit 1
+            fi
+          else
+            echo "::error::webkit2gtk-4.1 not found in ${{ inputs.container_image }}. Add libwebkit2gtk-4.1-dev to build_deps."
+            exit 1
+          fi
+          echo "✓ Preflight passed"
+
+      - name: Checkout upstream at tag
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ inputs.upstream_repo }}
+          ref: ${{ needs.resolve.outputs.tag }}
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ inputs.node_version }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ inputs.pnpm_version }}
+
+      - name: Install dependencies
+        run: |
+          CMD='${{ inputs.install_command }}'
+          eval "${CMD//\{target\}/${{ matrix.target }}}"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ inputs.rust_version }}
+          targets: ${{ matrix.target }}
+
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696
+        with:
+          version: "v0.10.0"
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./ -> target"
+          shared-key: compat-${{ inputs.app_id }}-${{ matrix.target }}
+          cache-on-failure: true
+
+      # 注意：不单独跑 pnpm build —— Tauri 的 beforeBuildCommand 会自动执行，
+      # 非 Tauri 项目把完整命令写进 build_command 即可
+      - name: Build AppImage
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ""
+        run: |
+          set -euo pipefail
+          CMD='${{ inputs.build_command }}'
+          CMD="${CMD//\{target\}/${{ matrix.target }}}"
+          CMD="${CMD//\{version\}/${{ needs.resolve.outputs.version }}}"
+          echo "+ $CMD"
+          eval "$CMD"
+
+      - name: Verify glibc compatibility
+        run: |
+          set -euo pipefail
+          echo "=== ldd (should be 2.31 for focal base) ==="
+          ldd --version | head -1
+          BINARY=$(find target -name "${{ inputs.app_id }}" -type f -executable 2>/dev/null | head -1)
+          if [ -n "$BINARY" ]; then
+            echo "Binary: $BINARY"
+            MAX=$(strings "$BINARY" | grep -o "GLIBC_[0-9.]*" | sort -V | tail -1 | sed 's/GLIBC_//')
+            echo "Max GLIBC required: $MAX"
+            # AppImage 内捆绑的 webkit 等 so 也要检查
+            SO_MAX=""
+            for so in $(find target -name "*.so" 2>/dev/null | head -50); do
+              m=$(strings "$so" | grep -o "GLIBC_[0-9.]*" | sort -V | tail -1 | sed 's/GLIBC_//' || true)
+              [ -n "$m" ] && SO_MAX=$(printf "%s\n%s" "$SO_MAX" "$m" | sort -V | tail -1)
+            done
+            echo "Max GLIBC in bundled .so: ${SO_MAX:-none}"
+            OVERALL=$(printf "%s\n%s\n" "$MAX" "$SO_MAX" | grep -v '^$' | sort -V | tail -1)
+            if [ "$(printf "2.31\n%s" "$OVERALL" | sort -V | tail -1)" != "2.31" ]; then
+              echo "::error::Requires GLIBC $OVERALL > 2.31 — will NOT run on Kylin V10. Aborting."
+              exit 1
+            fi
+            echo "✓ GLIBC check passed (<= 2.31)"
+          else
+            echo "::warning::main binary not found, GLIBC check incomplete"
+          fi
+
+      - name: Collect and rename artifacts
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.resolve.outputs.version }}"
+          ARCH="${{ matrix.appimage_arch }}"
+          SRC=$(find target -name "*.AppImage" -type f 2>/dev/null | head -1)
+          [ -n "$SRC" ] || { echo "::error::No AppImage produced"; find . -name "*.AppImage" | head; exit 1; }
+          DEST=$(echo '${{ inputs.artifact_name }}' \
+            | sed "s/{app}/${{ inputs.app_id }}/g; s/{version}/$VERSION/g; s/{arch}/$ARCH/g")
+          cp "$SRC" "$DEST"
+          ls -lh "$DEST"
+          sha256sum "$DEST" | tee "${DEST}.sha256"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.app_id }}-${{ matrix.arch }}
+          path: |
+            *.AppImage
+            *.AppImage.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Show sccache stats
+        if: always()
+        continue-on-error: true
+        run: sccache --show-stats || true
+
+  release:
+    name: Publish Release
+    needs: [resolve, build]
+    if: needs.resolve.outputs.skipped != 'true' && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all AppImages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ inputs.app_id }}-*
+          merge-multiple: true
+
+      - name: Create / Update Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
+          UPSTREAM_TAG: ${{ needs.resolve.outputs.tag }}
+          UPSTREAM_REPO: ${{ inputs.upstream_repo }}
+          APP_ID: ${{ inputs.app_id }}
+          DISPLAY_NAME: ${{ inputs.display_name }}
+        run: |
+          set -euo pipefail
+          NAME="${DISPLAY_NAME:-$APP_ID}"
+          if gh release view "$RELEASE_TAG" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG exists, uploading assets..."
+          else
+            NOTES=$(gh api "repos/$UPSTREAM_REPO/releases/tags/$UPSTREAM_TAG" --jq '.body' 2>/dev/null || true)
+            PREFIX="> **Compat build** — $NAME 基于 Ubuntu 20.04 (glibc 2.31) 重新构建，兼容麒麟 V10。
+          > 上游: https://github.com/$UPSTREAM_REPO/releases/tag/$UPSTREAM_TAG"
+            NOTES="${PREFIX}
+
+          ---
+
+          ${NOTES:- compat build, see upstream release notes.}"
+            gh release create "$RELEASE_TAG" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "$RELEASE_TAG (glibc 2.31 compat)" \
+              --notes "$NOTES" \
+              --latest=false
+          fi
+          gh release upload "$RELEASE_TAG" --repo "${GITHUB_REPOSITORY}" --clobber *.AppImage *.AppImage.sha256
+          echo "✓ Uploaded:"
+          gh release view "$RELEASE_TAG" --repo "${GITHUB_REPOSITORY}" --json assets --jq '.assets[].name'
