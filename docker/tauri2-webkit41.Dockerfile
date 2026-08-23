@@ -44,10 +44,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libenchant-2-dev \
     # JOURNALD_LOG（ENABLE_JOURNALD_LOG=ON）：systemd 日志
     libsystemd-dev \
-    # MEDIA_RECORDER（ENABLE_MEDIA_RECORDER=ON）：GStreamer 编码插件（bad 提供 encoder 元素）
-    libgstreamer-plugins-bad1.0-dev \
-    # WEB_RTC（ENABLE_WEB_RTC=ON）：WebRTC 音频处理
-    libwebrtc-audio-processing-dev \
     # USE_OPENJPEG=ON：OpenJPEG 解码
     libopenjp2-7-dev \
     # libsoup3 硬依赖（meson.build 无条件要求，缺失即 setup 失败）
@@ -100,8 +96,9 @@ RUN curl -fsSL https://webkitgtk.org/releases/webkitgtk-2.40.5.tar.xz | tar xJ -
        -DENABLE_SPELLCHECK=ON \
        -DENABLE_SPEECH_SYNTHESIS=OFF \
        -DENABLE_JOURNALD_LOG=ON \
-       -DENABLE_MEDIA_RECORDER=ON \
-       -DENABLE_WEB_RTC=ON \
+       -DENABLE_MEDIA_STREAM=OFF \
+       -DENABLE_MEDIA_RECORDER=OFF \
+       -DENABLE_WEB_RTC=OFF \
        -DUSE_OPENJPEG=ON \
        -DUSE_AVIF=ON \
        -DUSE_SOUP2=OFF \
