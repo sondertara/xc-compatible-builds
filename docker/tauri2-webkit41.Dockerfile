@@ -38,14 +38,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libepoxy-dev libgbm-dev libdrm-dev liblcms2-dev \
     # X11 target 强制依赖（OptionsGTK.cmake:450-465）
     libxcomposite-dev libxdamage-dev libxrender-dev libxt-dev \
-    # Wayland target（ENABLE_WAYLAND_TARGET=ON）：WPE 合成后端 + wayland 协议
-    libwayland-dev libwpe-1.0-dev libwpebackend-fdo-1.0-dev \
     # SPELLCHECK（ENABLE_SPELLCHECK=ON）：enchant 拼写引擎
     libenchant-2-dev \
     # JOURNALD_LOG（ENABLE_JOURNALD_LOG=ON）：systemd 日志
     libsystemd-dev \
-    # USE_OPENJPEG=ON：OpenJPEG 解码
-    libopenjp2-7-dev \
     # libsoup3 硬依赖（meson.build 无条件要求，缺失即 setup 失败）
     libnghttp2-dev libpsl-dev libbrotli-dev \
     # Tauri 运行/链接依赖
@@ -92,15 +88,15 @@ RUN curl -fsSL https://webkitgtk.org/releases/webkitgtk-2.40.5.tar.xz | tar xJ -
        -DENABLE_BUBBLEWRAP_SANDBOX=OFF \
        -DENABLE_GAMEPAD=OFF \
        -DENABLE_WEBDRIVER=OFF \
-       -DENABLE_WAYLAND_TARGET=ON \
+       -DENABLE_WAYLAND_TARGET=OFF \
        -DENABLE_SPELLCHECK=ON \
        -DENABLE_SPEECH_SYNTHESIS=OFF \
        -DENABLE_JOURNALD_LOG=ON \
        -DENABLE_MEDIA_STREAM=OFF \
        -DENABLE_MEDIA_RECORDER=OFF \
        -DENABLE_WEB_RTC=OFF \
-       -DUSE_OPENJPEG=ON \
-       -DUSE_AVIF=ON \
+       -DUSE_OPENJPEG=OFF \
+       -DUSE_AVIF=OFF \
        -DUSE_SOUP2=OFF \
        -DUSE_JPEGXL=OFF \
        -DUSE_SKIA=OFF \
