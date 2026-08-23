@@ -12,9 +12,6 @@
 
 FROM debian:bullseye
 
-# bullseye-backports 提供 libjxl-dev（主源无 JPEG XL 解码库），仅该包使用
-RUN echo "deb http://deb.debian.org/debian bullseye-backports main" > /etc/apt/sources.list.d/backports.list
-
 ENV DEBIAN_FRONTEND=noninteractive \
     PKG_CONFIG_PATH=/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/aarch64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig
 
@@ -45,8 +42,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libwayland-dev libwpe-1.0-dev libwpebackend-fdo-1.0-dev \
     # SPELLCHECK（ENABLE_SPELLCHECK=ON）：enchant 拼写引擎
     libenchant-2-dev \
-    # SPEECH_SYNTHESIS（ENABLE_SPEECH_SYNTHESIS=ON）：flite 语音合成
-    libflite1-dev \
     # JOURNALD_LOG（ENABLE_JOURNALD_LOG=ON）：systemd 日志
     libsystemd-dev \
     # MEDIA_RECORDER（ENABLE_MEDIA_RECORDER=ON）：GStreamer 编码插件（bad 提供 encoder 元素）
@@ -55,8 +50,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libwebrtc-audio-processing-dev \
     # USE_OPENJPEG=ON：OpenJPEG 解码
     libopenjp2-7-dev \
-    # USE_JPEGXL=ON：JPEG XL 解码（bullseye 主源无，需 backports）
-    libjxl-dev/bullseye-backports \
     # libsoup3 硬依赖（meson.build 无条件要求，缺失即 setup 失败）
     libnghttp2-dev libpsl-dev libbrotli-dev \
     # Tauri 运行/链接依赖
@@ -105,14 +98,14 @@ RUN curl -fsSL https://webkitgtk.org/releases/webkitgtk-2.40.5.tar.xz | tar xJ -
        -DENABLE_WEBDRIVER=OFF \
        -DENABLE_WAYLAND_TARGET=ON \
        -DENABLE_SPELLCHECK=ON \
-       -DENABLE_SPEECH_SYNTHESIS=ON \
+       -DENABLE_SPEECH_SYNTHESIS=OFF \
        -DENABLE_JOURNALD_LOG=ON \
        -DENABLE_MEDIA_RECORDER=ON \
        -DENABLE_WEB_RTC=ON \
        -DUSE_OPENJPEG=ON \
        -DUSE_AVIF=ON \
        -DUSE_SOUP2=OFF \
-       -DUSE_JPEGXL=ON \
+       -DUSE_JPEGXL=OFF \
        -DUSE_SKIA=OFF \
        -DUSE_LD_GOLD=OFF \
     && ninja -C _build -j"$(nproc)" install \
