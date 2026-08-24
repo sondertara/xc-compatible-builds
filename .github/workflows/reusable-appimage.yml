@@ -186,7 +186,8 @@ jobs:
         run: |
           set -euo pipefail
           # 1) glibc 上限：产物必须兼容麒麟桌面 V10 (glibc 2.31)
-          GLIBC_VER=$(ldd --version | head -1 | grep -oE '[0-9]+\.[0-9]+$')
+          # 注意：不要用 `ldd --version | head -1` —— head 提前关闭管道会让 ldd 收 SIGPIPE(141)
+          GLIBC_VER=$(ldd --version 2>&1 | grep -m1 -oE '[0-9]+\.[0-9]+$')
           echo "Container glibc: $GLIBC_VER"
           if [ "$(printf "2.31\n$GLIBC_VER" | sort -V | tail -1)" != "2.31" ]; then
             echo "::error::Container glibc $GLIBC_VER > 2.31 — the AppImage would NOT run on Kylin V10. Use a glibc 2.31 base (debian:bullseye)."
@@ -268,15 +269,15 @@ jobs:
         run: |
           set -euo pipefail
           echo "=== ldd (should be 2.31 for focal base) ==="
-          ldd --version | head -1
-          BINARY=$(find target -name "${{ inputs.app_id }}" -type f -executable 2>/dev/null | head -1)
+          ldd --version 2>&1 | awk 'NR==1{print; exit}'
+          BINARY=$(find target -name "${{ inputs.app_id }}" -type f -executable 2>/dev/null -print -quit)
           if [ -n "$BINARY" ]; then
             echo "Binary: $BINARY"
             MAX=$(strings "$BINARY" | grep -o "GLIBC_[0-9.]*" | sort -V | tail -1 | sed 's/GLIBC_//')
             echo "Max GLIBC required: $MAX"
             # AppImage 内捆绑的 webkit 等 so 也要检查
             SO_MAX=""
-            for so in $(find target -name "*.so" 2>/dev/null | head -50); do
+            for so in $(find target -name "*.so" 2>/dev/null); do
               m=$(strings "$so" | grep -o "GLIBC_[0-9.]*" | sort -V | tail -1 | sed 's/GLIBC_//' || true)
               [ -n "$m" ] && SO_MAX=$(printf "%s\n%s" "$SO_MAX" "$m" | sort -V | tail -1)
             done
@@ -296,8 +297,8 @@ jobs:
           set -euo pipefail
           VERSION="${{ needs.resolve.outputs.version }}"
           ARCH="${{ matrix.appimage_arch }}"
-          SRC=$(find target -name "*.AppImage" -type f 2>/dev/null | head -1)
-          [ -n "$SRC" ] || { echo "::error::No AppImage produced"; find . -name "*.AppImage" | head; exit 1; }
+          SRC=$(find target -name "*.AppImage" -type f 2>/dev/null -print -quit)
+          [ -n "$SRC" ] || { echo "::error::No AppImage produced"; find . -name "*.AppImage" -print -quit; exit 1; }
           DEST=$(echo '${{ inputs.artifact_name }}' \
             | sed "s/{app}/${{ inputs.app_id }}/g; s/{version}/$VERSION/g; s/{arch}/$ARCH/g")
           cp "$SRC" "$DEST"
