@@ -1,32 +1,115 @@
-# 定制构建镜像：Ubuntu 20.04 focal (glibc 2.31) + 官方 webkit2gtk-4.1
+# 定制构建镜像：glibc 2.31 基底 + WebKitGTK 2.44 (webkit2gtk-4.1 API)
 #
-# Tauri 2.x (wry) 要求 webkit2gtk-4.1 (>=2.40)。
-# Debian bullseye 只有 4.0 (2.38)，需源码编；Ubuntu 20.04 focal (同为 glibc 2.31)
-# 的 universe 源直接提供 libwebkit2gtk-4.1-dev (>=2.40)，apt 即可，无需源码编译 glib/webkit。
+# Tauri 2.x (wry) 要求 webkit2gtk-4.1 (>=2.40) 且需要完整 cookie API (get_all_cookies 等)。
+# glibc 2.31 的发行版（bullseye/focal）官方源只有 webkit2gtk-4.0 (2.38) 或 4.1 太旧 (2.40.5 缺 cookie API)。
+# 因此在 bullseye 基底上源码编译 glib 2.72 + libsoup3 + WebKitGTK 2.44.x。
 #
-# 由 .github/workflows/build-image.yml 在 CI 构建（x64 + arm64），推送到 ghcr.io
+# 由 .github/workflows/build-image.yml 在 CI 构建（x64 + arm64 原生 runner），
+# 推送到 ghcr.io 作为缓存，首次约 2~3 小时，仅需一次。
 
-FROM ubuntu:focal
+FROM debian:bullseye
 
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+    PKG_CONFIG_PATH=/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/aarch64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig \
+    LIBRARY_PATH=/usr/local/lib:/usr/local/lib/x86_64-linux-gnu:/usr/local/lib/aarch64-linux-gnu
 
+# ---- 基础工具 + WebKitGTK/Tauri 编译依赖 ----
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl xz-utils git python3 python3-pip \
     build-essential pkg-config ninja-build ccache file locales tzdata sudo \
-    libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev \
+    # WebKit 构建脚本硬依赖（代码生成工具，CMake 配置阶段即强制要求）
+    ruby ruby-dev \
+    gperf bison flex perl gettext \
+    # unifdef：WebKit 的 OptionsGTK.cmake 配置阶段强制要求（C 预处理器条件编译工具）
+    unifdef \
+    # glib 构建依赖
+    meson libffi-dev zlib1g-dev libpcre2-dev libmount-dev \
+    # webkit 构建依赖
+    cmake libxml2-dev libxslt1-dev libsqlite3-dev libgnutls28-dev \
+    libicu-dev libgcrypt20-dev libtasn1-dev \
     libgtk-3-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+    libhyphen-dev libwebp-dev libjpeg62-turbo-dev libpng-dev \
+    libavif-dev libopus-dev libwoff-dev \
+    libegl1-mesa-dev libgles2-mesa-dev libgl1-mesa-dri \
+    # webkit OptionsGTK.cmake 强制 find_package 的其余依赖
+    libcairo2-dev libfontconfig1-dev libfreetype6-dev libharfbuzz-dev \
+    libepoxy-dev libgbm-dev libdrm-dev liblcms2-dev \
+    # X11 target 强制依赖（OptionsGTK.cmake:450-465）
+    libxcomposite-dev libxdamage-dev libxrender-dev libxt-dev \
+    # SPELLCHECK（ENABLE_SPELLCHECK=ON）：enchant 拼写引擎
+    libenchant-2-dev \
+    # JOURNALD_LOG（ENABLE_JOURNALD_LOG=ON）：systemd 日志
+    libsystemd-dev \
+    # libsoup3 硬依赖（meson.build 无条件要求，缺失即 setup 失败）
+    libnghttp2-dev libpsl-dev libbrotli-dev \
+    # Tauri 运行/链接依赖
     libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev \
     libsecret-1-dev xdg-utils patchelf \
     && rm -rf /var/lib/apt/lists/* \
     && locale-gen en_US.UTF-8 || true
 
-# 自检：glibc 必须 2.31；webkit 必须是 4.1 API 且 >= 2.40；且 .so 的 GLIBC 符号 <= 2.31
+# cmake 升级（bullseye 3.18，WebKit 2.44 需要 >= 3.20 且 < 4.0；4.x 已移除旧语法）
+# 用清华镜像源避免 PyPI 直连失败；cmake 3.28.x 是最后支持 Python 3.6 的系列
+RUN pip3 install --no-cache-dir --upgrade \
+    -i https://pypi.tuna.tsinghua.edu.cn/simple \
+    "cmake>=3.24,<3.29" meson
+
+# ---- 1. glib 2.72（WebKit 2.44 需要 >= 2.70，bullseye 只有 2.66）----
+# --libdir=lib：统一装到 /usr/local/lib（避免多架构路径在 pkg-config/ldconfig 间不一致）
+RUN curl -fsSL https://download.gnome.org/sources/glib/2.72/glib-2.72.4.tar.xz | tar xJ -C /tmp \
+    && cd /tmp/glib-2.72.4 \
+    && meson setup _build --buildtype=release --libdir=lib -Dtests=false -Dselinux=disabled -Dman=false \
+    && ninja -C _build install \
+    && ldconfig && rm -rf /tmp/glib-2.72.4 \
+    && pkg-config --modversion glib-2.0 | grep -q 2.72 \
+    && echo "glib 2.72 OK"
+
+# ---- 2. libsoup3（webkit 4.1 API 依赖，bullseye 无此包；3.2 系列最高 3.2.3）----
+RUN curl -fsSL https://download.gnome.org/sources/libsoup/3.2/libsoup-3.2.3.tar.xz | tar xJ -C /tmp \
+    && cd /tmp/libsoup-3.2.3 \
+    && meson setup _build --buildtype=release --libdir=lib -Dtests=false -Dvapi=disabled -Dgssapi=disabled -Ddocs=disabled -Dtls_check=false \
+    && ninja -C _build install \
+    && ldconfig && rm -rf /tmp/libsoup-3.2.3 \
+    && pkg-config --modversion libsoup-3.0 \
+    && echo "libsoup3 OK"
+
+# ---- 3. WebKitGTK 2.44.4（提供 webkit2gtk-4.1 API；2.44 系列有完整 cookie API）----
+# 启用必要组件，关闭不必要的组件控制编译时长与依赖面
+RUN curl -fsSL https://webkitgtk.org/releases/webkitgtk-2.44.4.tar.xz | tar xJ -C /tmp \
+    && cd /tmp/webkitgtk-2.44.4 \
+    && cmake -B _build -GNinja -DCMAKE_BUILD_TYPE=Release -DPORT=GTK \
+       -DCMAKE_INSTALL_PREFIX=/usr/local \
+       -DENABLE_DOCUMENTATION=OFF \
+       -DENABLE_MINIBROWSER=OFF \
+       -DENABLE_INTROSPECTION=OFF \
+       -DENABLE_API_TESTS=OFF \
+       -DENABLE_BUBBLEWRAP_SANDBOX=OFF \
+       -DENABLE_GAMEPAD=OFF \
+       -DENABLE_WEBDRIVER=OFF \
+       -DENABLE_WAYLAND_TARGET=OFF \
+       -DENABLE_SPELLCHECK=ON \
+       -DENABLE_SPEECH_SYNTHESIS=OFF \
+       -DENABLE_JOURNALD_LOG=ON \
+       -DENABLE_MEDIA_STREAM=OFF \
+       -DENABLE_MEDIA_RECORDER=OFF \
+       -DENABLE_WEB_RTC=OFF \
+       -DUSE_OPENJPEG=OFF \
+       -DUSE_AVIF=OFF \
+       -DUSE_SOUP2=OFF \
+       -DUSE_JPEGXL=OFF \
+       -DUSE_SKIA=OFF \
+       -DUSE_LD_GOLD=OFF \
+    && ninja -C _build -j"$(nproc)" install \
+    && ldconfig && rm -rf /tmp/webkitgtk-2.44.4 \
+    && pkg-config --modversion webkit2gtk-4.1 \
+    && echo "webkit2gtk-4.1 OK"
+
+# 自检：glibc 必须 2.31；webkit 必须是 4.1 API 且 >= 2.40；
+# 且编译产物 .so 的 GLIBC 符号 <= 2.31（麒麟桌面 V10 硬约束，超限即构建失败）
 RUN set -eu \
     && ldd --version | head -1 | grep -q 2.31 \
-    && WK_VER=$(pkg-config --modversion webkit2gtk-4.1) \
-    && echo "webkit2gtk-4.1: $WK_VER" \
-    && [ "$(printf "2.40\n$WK_VER" | sort -V | tail -1)" != "2.40" ] \
-    && SO=$(ls /usr/lib/x86_64-linux-gnu/libwebkit2gtk-4.1.so.0* 2>/dev/null | head -1 || ls /usr/lib/aarch64-linux-gnu/libwebkit2gtk-4.1.so.0* 2>/dev/null | head -1 || ls /usr/lib/*/libwebkit2gtk-4.1.so.0* 2>/dev/null | head -1) \
+    && [ "$(printf "2.40\n$(pkg-config --modversion webkit2gtk-4.1)" | sort -V | tail -1)" != "2.40" ] \
+    && SO=$(ls /usr/local/lib/libwebkit2gtk-4.1.so.0* | head -1) \
     && MAXSYM=$(strings "$SO" | grep -oE "GLIBC_[0-9.]+" | sort -Vu | tail -1 | cut -d_ -f2) \
     && echo "libwebkit2gtk-4.1.so max GLIBC symbol: $MAXSYM" \
     && [ "$(printf "2.31\n$MAXSYM" | sort -V | tail -1)" = "2.31" ] \
