@@ -164,6 +164,10 @@ jobs:
       options: --privileged
     env:
       DEBIAN_FRONTEND: noninteractive
+    defaults:
+      run:
+        # 容器内默认 shell 是 sh(dash)，不支持 set -o pipefail；统一用 bash
+        shell: bash
 
     steps:
       # 注意：容器内不装 gh（用不到）；webkit 等重依赖由定制镜像提供
@@ -180,14 +184,7 @@ jobs:
 
       - name: Preflight — glibc <= 2.31, webkit2gtk-4.1 >= 2.40 (if Tauri)
         run: |
-          set -uxo pipefail
-          echo "=== DEBUG preflight env ==="
-          echo "whoami: $(whoami)"
-          echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
-          echo "ldd: $(ldd --version | head -1)"
-          echo "pkg-config --exists webkit2gtk-4.1: $(pkg-config --exists webkit2gtk-4.1 && echo YES || echo NO)"
-          echo "webkit modversion: $(pkg-config --modversion webkit2gtk-4.1 2>&1)"
-          echo "=== end DEBUG ==="
+          set -euo pipefail
           # 1) glibc 上限：产物必须兼容麒麟桌面 V10 (glibc 2.31)
           GLIBC_VER=$(ldd --version | head -1 | grep -oE '[0-9]+\.[0-9]+$')
           echo "Container glibc: $GLIBC_VER"
