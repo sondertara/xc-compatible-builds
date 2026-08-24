@@ -13,7 +13,8 @@
 FROM debian:bullseye
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    PKG_CONFIG_PATH=/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/aarch64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig
+    PKG_CONFIG_PATH=/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/aarch64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig \
+    LIBRARY_PATH=/usr/local/lib:/usr/local/lib/x86_64-linux-gnu:/usr/local/lib/aarch64-linux-gnu
 
 # ---- 基础工具 + WebKitGTK/Tauri 编译依赖 ----
 RUN apt-get update && apt-get install -y --no-install-recommends \
