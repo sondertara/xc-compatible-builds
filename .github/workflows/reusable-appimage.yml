@@ -164,6 +164,8 @@ jobs:
       options: --privileged
     env:
       DEBIAN_FRONTEND: noninteractive
+      # 强制链接器优先搜 /usr/local/lib (glib 2.72)，避免被系统 glib 2.66 抢占导致 g_memdup2 等符号缺失
+      RUSTFLAGS: "-L/usr/local/lib -Wl,-rpath,/usr/local/lib"
     defaults:
       run:
         # 容器内默认 shell 是 sh(dash)，不支持 set -o pipefail；统一用 bash

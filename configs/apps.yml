@@ -8,7 +8,6 @@ apps:
     # 可选：是否启用定时自动跟踪（默认 true）
     auto_track: true
 
-  # 示例：新增软件时取消注释并修改
-  # - id: myapp
-  #   config: configs/myapp.yml
-  #   auto_track: true
+  - id: gonavi
+    config: configs/gonavi.yml
+    auto_track: true

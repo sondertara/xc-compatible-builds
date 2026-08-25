@@ -1,0 +1,36 @@
+app_id: gonavi
+upstream_repo: Syngnat/GoNavi
+display_name: GoNavi
+
+# glibc 2.31 兼容构建（麒麟 V10）
+# GoNavi 是 Wails v2.11.0 应用，Linux 使用 webkit2gtk-4.0 (非 4.1)
+# Ubuntu 20.04 focal 也是 glibc 2.31，且官方源直接提供 libwebkit2gtk-4.0-dev
+# 无需定制镜像，直接使用 ubuntu:20.04 即可
+container_image: "ubuntu:20.04"
+container_image_arm64: "ubuntu:20.04"
+
+# 与上游 release.yml 对齐
+node_version: "20"
+# GoNavi 使用 Go 1.25 (go.mod) 和 Wails v2.11.0
+# 注意：reusable 工作流默认使用 Rust，这里需要 Go，需配合专用工作流
+go_version: "1.25"
+wails_version: "v2.11.0"
+
+# Wails Linux 构建依赖（webkit 4.0，非 Tauri 的 4.1）
+# 对应 GoNavi release.yml 的 Install Linux Dependencies 步骤
+build_deps: >
+  libgtk-3-dev libwebkit2gtk-4.0-dev
+  upx-ucl libfuse2
+  build-essential pkg-config
+
+# 安装命令：安装 Wails + 前端依赖
+install_command: go install github.com/wailsapp/wails/v2/cmd/wails@v2.11.0 && npm --prefix frontend ci
+
+# 构建命令：Wails 构建 Linux 二进制
+# {target} 会被替换为 x86_64-unknown-linux-gnu / aarch64-unknown-linux-gnu
+# {version} 为版本号如 0.9.4
+build_command: wails build -s -skipbindings -trimpath -platform linux/{target} -clean -o build/bin/GoNavi -ldflags "-s -w -X GoNavi-Wails/internal/app.AppVersion={version}"
+
+# 产物命名：与上游 release.yml 的 tar.gz 命名对齐
+# 上游为 GoNavi-0.9.4-Linux-Amd64.tar.gz，这里生成兼容版
+artifact_name: "GoNavi-{version}-Linux-{arch}.tar.gz"
