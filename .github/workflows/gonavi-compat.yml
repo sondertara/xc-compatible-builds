@@ -148,7 +148,9 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="${{ needs.resolve.outputs.version }}"
-          wails build -s -skipbindings -trimpath -platform linux/${{ matrix.goarch }} -clean -o build/bin/GoNavi -ldflags "-s -w -X GoNavi-Wails/internal/app.AppVersion=${VERSION}"
+          wails build -s -skipbindings -trimpath -platform linux/${{ matrix.goarch }} -clean -o GoNavi -ldflags "-s -w -X GoNavi-Wails/internal/app.AppVersion=${VERSION}"
+          # wails -o is relative to build/bin, so output is build/bin/GoNavi
+          ls -la build/bin/
           test -f build/bin/GoNavi
           chmod +x build/bin/GoNavi
 
