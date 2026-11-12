@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - ".github/workflows/debug-image.yml"
+      - "docker/tauri2-webkit41.Dockerfile"
 
 permissions:
   contents: write
