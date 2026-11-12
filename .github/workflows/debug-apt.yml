@@ -41,4 +41,4 @@ jobs:
           rc=$?
           echo "apt exit=$rc"
           tail -n 60 apt.log | sed 's/^/::error::/'
-          exit 0
+          exit "$rc"
