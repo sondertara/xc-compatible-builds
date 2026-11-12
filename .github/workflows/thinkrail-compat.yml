@@ -79,21 +79,28 @@ jobs:
           if [ "$U" -ne 0 ]; then exit "$U"; fi
           exit "$I"
 
-      - name: Publish apt log
-        if: failure()
+      - name: Diagnose apt log
+        if: always()
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const path = require('path');
-            const logPath = path.join(process.env.GITHUB_WORKSPACE || '', 'apt.log');
-            if (!fs.existsSync(logPath)) return;
-            const log = fs.readFileSync(logPath, 'utf8').slice(-50000);
+            const ws = process.env.GITHUB_WORKSPACE || '';
+            let entries = [];
+            try { entries = fs.readdirSync(ws); } catch (e) { entries = [String(e)]; }
+            const info = {
+              ws,
+              cwd: process.cwd(),
+              entries,
+              apt_ws: fs.existsSync(ws + '/apt.log'),
+              apt_root: fs.existsSync('/apt.log'),
+              apt_tmp: fs.existsSync('/tmp/apt.log')
+            };
             await github.rest.repos.createCommitComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               commit_sha: context.sha,
-              body: 'apt failure log:\n```\n' + log + '\n```'
+              body: 'apt diag:\n```json\n' + JSON.stringify(info, null, 2) + '\n```'
             });
 
       - name: Preflight ABI (glibc 2.31, WebKitGTK 4.0 2.38.x)
