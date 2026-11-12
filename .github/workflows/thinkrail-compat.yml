@@ -62,13 +62,13 @@ jobs:
       - name: Install build dependencies (focal)
         run: |
           set -euo pipefail
-          apt-get update 2>&1 | tee /tmp/apt.log
+          apt-get update 2>&1 | tee "$GITHUB_WORKSPACE/apt.log"
           apt-get install -y --no-install-recommends \
             ca-certificates curl git build-essential pkg-config patch file \
             zstd bzip2 patchelf \
             libwebkit2gtk-4.0-dev libgtk-3-dev libayatana-appindicator3-dev \
             libx11-dev libxext-dev libxrender-dev libxcomposite-dev libxdamage-dev \
-            2>&1 | tee -a /tmp/apt.log
+            2>&1 | tee -a "$GITHUB_WORKSPACE/apt.log"
 
       - name: Publish dependency log
         if: failure()
@@ -76,8 +76,10 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            if (!fs.existsSync('/tmp/apt.log')) return;
-            const log = fs.readFileSync('/tmp/apt.log', 'utf8').slice(-50000);
+            const path = require('path');
+            const logPath = path.join(process.env.GITHUB_WORKSPACE, 'apt.log');
+            if (!fs.existsSync(logPath)) return;
+            const log = fs.readFileSync(logPath, 'utf8').slice(-50000);
             await github.rest.repos.createCommitComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
