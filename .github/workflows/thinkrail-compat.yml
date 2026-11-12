@@ -208,13 +208,11 @@ jobs:
               body: 'cef failure:\n```\n' + log + '\n```'
             });
 
-      - name: Fetch Dawn webgpu.h
+      - name: Install Dawn webgpu.h
         run: |
           set -euo pipefail
           mkdir -p wgpu/dawn
-          curl -fL --retry 3 --retry-delay 5 \
-            -o wgpu/dawn/webgpu.h \
-            "https://raw.githubusercontent.com/webgpu-native/webgpu-headers/main/webgpu.h"
+          cp "$GITHUB_WORKSPACE/third_party/dawn/webgpu.h" wgpu/dawn/webgpu.h
           test -s wgpu/dawn/webgpu.h
 
       - name: Apply WebKitGTK 4.0 compatibility patch
