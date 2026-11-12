@@ -1,0 +1,208 @@
+name: Upstream Watch — scheduled compatible builds
+
+# Central upstream watcher.
+#
+# For every app registered in configs/apps.yml:
+#   1. read configs/<id>.yml
+#   2. query the upstream latest release
+#   3. skip if this repo already has an <id>-<tag> release with assets
+#   4. dispatch the app's own workflow (config `workflow:`, default app-build.yml)
+#
+# Why not a matrix calling reusable workflows: a job that `uses:` a reusable
+# workflow cannot declare `strategy.matrix`, and the three build paths here are
+# different (Tauri/AppImage, Wails/Go, Electrobun/prebuilt wrapper).
+#
+# A push only performs a dry run: the discovery result is published, but no
+# build is dispatched. Real builds are dispatched by the weekly schedule or by
+# a manual workflow_dispatch.
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "指定软件 id（留空或 all = 遍历 configs/apps.yml）"
+        required: false
+        default: "all"
+        type: string
+      version:
+        description: "强制指定版本 tag（仅配合单个 app 使用）"
+        required: false
+        default: ""
+        type: string
+      dry_run:
+        description: "只检测，不触发构建"
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    - cron: "0 2 * * 1"  # 每周一 02:00 UTC
+  push:
+    branches: [main, thinkrail-kylin]
+    paths:
+      - "configs/**"
+      - "apps/**"
+      - ".github/workflows/upstream-watch.yml"
+
+permissions:
+  actions: write   # gh workflow run
+  contents: read   # configs + release list
+
+concurrency:
+  group: upstream-watch
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    name: Discover apps needing build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Resolve pending builds
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_APP: ${{ inputs.app }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          pip3 install --quiet pyyaml 2>/dev/null || pip3 install --break-system-packages --quiet pyyaml || true
+          python3 << 'PY'
+          import os
+          import pathlib
+          import subprocess
+          import sys
+
+          import yaml
+
+          def gh(*args):
+              return subprocess.run(["gh", *args], capture_output=True, text=True)
+
+          apps = (yaml.safe_load(pathlib.Path("configs/apps.yml").read_text()) or {}).get("apps", [])
+          input_app = (os.environ.get("INPUT_APP") or "all").strip()
+          input_version = (os.environ.get("INPUT_VERSION") or "").strip()
+          event = os.environ.get("GITHUB_EVENT_NAME", "")
+          dry_run = event == "push" or (os.environ.get("INPUT_DRY_RUN") or "").lower() == "true"
+
+          if input_version and input_app == "all":
+              print("::error::version requires a single app id")
+              raise SystemExit(1)
+
+          if input_app and input_app != "all":
+              apps = [a for a in apps if a.get("id") == input_app]
+              if not apps:
+                  print(f"::error::app '{input_app}' is not registered in configs/apps.yml")
+                  raise SystemExit(1)
+          elif event == "schedule":
+              apps = [a for a in apps if a.get("auto_track", True)]
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          pending = []
+
+          for app in apps:
+              app_id = app["id"]
+              cfg_path = pathlib.Path(app.get("config", f"configs/{app_id}.yml"))
+              if not cfg_path.exists():
+                  print(f"::warning::{app_id}: {cfg_path} missing, skipped")
+                  continue
+
+              cfg = yaml.safe_load(cfg_path.read_text()) or {}
+              upstream = str(cfg.get("upstream_repo") or "").strip()
+              if not upstream:
+                  print(f"::warning::{app_id}: upstream_repo missing, skipped")
+                  continue
+
+              workflow = str(cfg.get("workflow") or "app-build.yml").strip()
+              workflow_path = pathlib.Path(".github/workflows") / workflow
+              if not workflow_path.exists():
+                  print(f"::warning::{app_id}: workflow {workflow} not found, skipped")
+                  continue
+
+              forced = bool(input_version and input_app == app_id)
+              if forced:
+                  tag = input_version
+              else:
+                  r = gh("api", f"repos/{upstream}/releases/latest", "--jq", ".tag_name")
+                  if r.returncode != 0 or not r.stdout.strip() or r.stdout.strip() == "null":
+                      print(f"::warning::{app_id}: cannot fetch latest release from {upstream}: {(r.stderr or r.stdout).strip()}")
+                      continue
+                  tag = r.stdout.strip()
+
+              if not tag.startswith("v"):
+                  tag = "v" + tag
+              release_tag = f"{app_id}-{tag}"
+
+              if not forced:
+                  r2 = gh("release", "view", release_tag, "--repo", repo,
+                          "--json", "assets", "--jq", ".assets | length")
+                  if r2.returncode == 0 and r2.stdout.strip().isdigit() and int(r2.stdout.strip()) > 0:
+                      print(f"  = {app_id}: {tag} already built ({release_tag}), skip")
+                      continue
+
+              pending.append((app_id, tag, workflow))
+              print(f"  + {app_id}: {tag} needs build via {workflow}")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"count={len(pending)}\n")
+              f.write(f"dry_run={'true' if dry_run else 'false'}\n")
+
+          with open("pending.tsv", "w") as f:
+              for app_id, tag, workflow in pending:
+                  f.write(f"{app_id}\t{tag}\t{workflow}\n")
+
+          print(f"Pending builds: {len(pending)} (dry_run={dry_run})")
+          print(f"::notice title=Upstream watch::pending={len(pending)} dry_run={str(dry_run).lower()}")
+          PY
+
+      - name: Trigger builds
+        if: steps.resolve.outputs.count != '0' && steps.resolve.outputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          failures=0
+          while IFS=$'\t' read -r app_id tag workflow; do
+            [ -z "$app_id" ] && continue
+            echo "::group::Dispatch $app_id @ $tag via $workflow"
+            args=(-f "version=$tag")
+            # app-build.yml also needs the app id; dedicated workflows derive
+            # everything from their own config/upstream.
+            if [ "$workflow" = "app-build.yml" ]; then
+              args+=(-f "app_id=$app_id")
+            fi
+            if ! gh workflow run "$workflow" \
+                --repo "${GITHUB_REPOSITORY}" \
+                --ref "${GITHUB_REF_NAME}" \
+                "${args[@]}"; then
+              echo "::error title=Dispatch failed::$app_id via $workflow"
+              failures=$((failures + 1))
+            fi
+            echo "::endgroup::"
+            sleep 3
+          done < pending.tsv
+          if [ "$failures" -ne 0 ]; then
+            echo "::error::$failures dispatch(es) failed"
+            exit 1
+          fi
+          echo "All pending builds dispatched."
+
+      - name: Publish discovery summary
+        if: always()
+        run: |
+          {
+            echo "## Upstream watch"
+            echo ""
+            echo "- dry_run: \`${{ steps.resolve.outputs.dry_run }}\`"
+            echo "- pending: \`${{ steps.resolve.outputs.count }}\`"
+            echo ""
+            if [ -s pending.tsv ]; then
+              echo "| app | tag | workflow |"
+              echo "|-----|-----|----------|"
+              while IFS=$'\t' read -r app_id tag workflow; do
+                echo "| $app_id | $tag | $workflow |"
+              done < pending.tsv
+            else
+              echo "All tracked apps are up to date."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

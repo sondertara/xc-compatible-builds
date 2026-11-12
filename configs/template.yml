@@ -5,12 +5,20 @@ app_id: myapp
 upstream_repo: owner/repo        # 必填
 display_name: MyApp              # 可选，Release 标题展示名
 
+# 构建路径（由 apps.yml 的定时巡检用 workflow 字段触发）：
+#   tauri-appimage    → workflow: app-build.yml
+#   go-wails          → workflow: gonavi-build.yml（参考 configs/gonavi.yml）
+#   prebuilt-wrapper  → workflow: <app>-compat.yml（参考 configs/thinkrail.yml）
+build_type: tauri-appimage
+workflow: app-build.yml
+
 # 构建镜像（glibc 2.31 基底）：
 # - Tauri 2 应用：必须用定制镜像（glibc 2.31 公共源无 webkit2gtk-4.1，
 #   已实测确认）。先在 Actions 手动跑一次 "Build Compat Image"
 #   （约 2~3h/架构，仅需一次），然后填：
 #   container_image:      ghcr.io/sondertara/xc-compat-tauri2:amd64
 #   container_image_arm64: ghcr.io/sondertara/xc-compat-tauri2:aarch64
+# - Wails/Go（webkit2gtk-4.0）：ubuntu:20.04，参考 configs/gonavi.yml
 # - 非 Tauri / 无 webkit 依赖：直接 debian:bullseye，两个都填它或省略 arm64
 container_image: "ghcr.io/sondertara/xc-compat-tauri2:amd64"
 container_image_arm64: "ghcr.io/sondertara/xc-compat-tauri2:aarch64"

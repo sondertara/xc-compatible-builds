@@ -2,7 +2,7 @@ name: App Build (single app, glibc 2.31)
 
 # 通用单软件构建入口：
 # - 手动触发：Actions → App Build → 填 app_id（必填）+ version（可选）
-# - 被 compat-build.yml 批量调度触发（通过 gh workflow run）
+# - 被 upstream-watch.yml 批量调度触发（通过 gh workflow run）
 # 配置读取 configs/<app_id>.yml，再调用 reusable-appimage.yml
 
 on:

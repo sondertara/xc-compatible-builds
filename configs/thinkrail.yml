@@ -7,6 +7,8 @@
 app_id: thinkrail
 upstream_repo: JetBrains/thinkrail
 display_name: ThinkRail
+build_type: prebuilt-wrapper
+workflow: thinkrail-compat.yml
 
 container_image: "ubuntu:20.04"
 container_image_arm64: ""
@@ -16,7 +18,6 @@ build_deps: >
   libx11-dev libxext-dev libxrender-dev libxcomposite-dev libxdamage-dev
   build-essential pkg-config patchelf bzip2 zstd
 
-# Upstream artifact is a prebuilt tar.zst; the custom workflow handles it.
-install_command: "true"
-build_command: "See .github/workflows/thinkrail-compat.yml"
+# Upstream artifact is a prebuilt tar.zst. Commands live in the dedicated
+# workflow; app-specific patches/vendored headers live in apps/thinkrail/.
 artifact_name: "ThinkRail-{version}-linux-{arch}-kylin.tar.gz"

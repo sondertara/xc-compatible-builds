@@ -1,6 +1,6 @@
 name: GoNavi Compat Build (glibc 2.31)
 
-# Wails v2.11.0 + webkit2gtk-4.0 (非 Tauri 的 4.1)
+# Wails + webkit2gtk-4.0 (非 Tauri 的 4.1)
 # Ubuntu 20.04 focal = glibc 2.31，官方源直接提供 libwebkit2gtk-4.0-dev
 # 无需定制镜像，直接 ubuntu:20.04 容器即可，产物兼容麒麟 V10
 
@@ -11,11 +11,18 @@ on:
         description: "指定版本 tag（如 v0.9.4），留空跟踪上游最新 Release"
         required: false
         default: ""
-  schedule:
-    - cron: "0 3 * * 1"  # 每周一 03:00 UTC 检查上游
+  push:
+    branches: [thinkrail-kylin]
+    paths:
+      - "configs/gonavi.yml"
+      - ".github/workflows/gonavi-build.yml"
 
 permissions:
   contents: write
+
+concurrency:
+  group: gonavi-build
+  cancel-in-progress: false
 
 jobs:
   resolve:
@@ -132,17 +139,30 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Wails
-        run: go install -v github.com/wailsapp/wails/v2/cmd/wails@v2.11.0
+        run: |
+          set -euo pipefail
+          # Keep the CLI in lockstep with the version pinned by the app's go.mod.
+          WAILS_VERSION=$(awk '$1=="github.com/wailsapp/wails/v2"{print $2}' go.mod)
+          if [ -z "$WAILS_VERSION" ]; then
+            echo "::error::cannot determine Wails version from go.mod"
+            exit 1
+          fi
+          echo "Wails $WAILS_VERSION"
+          go install -v "github.com/wailsapp/wails/v2/cmd/wails@${WAILS_VERSION}"
 
       - name: Build frontend
         run: |
           set -euo pipefail
           mkdir -p frontend/dist
           printf '<!doctype html><title>GoNavi</title>\n' > frontend/dist/index.html
+          # Upstream's frontend build reads this stub; without it npm run build
+          # fails before producing dist.tar.br.
+          cp tools/stub-dist.tar.br frontend/dist.tar.br
           wails generate module
           node frontend/scripts/wails-frontend-install.mjs
           npm --prefix frontend run build
           test -s frontend/dist/index.html
+          test -s frontend/dist.tar.br
 
       - name: Build Wails binary
         run: |

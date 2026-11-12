@@ -2,7 +2,8 @@ name: ThinkRail Kylin compat (glibc 2.31 / WebKitGTK 4.0)
 
 # ThinkRail is an Electrobun app, so it cannot use reusable-appimage.yml
 # (that workflow is Tauri/AppImage-only and requires WebKitGTK 4.1 >= 2.40).
-# This is the ThinkRail counterpart of gonavi-compat.yml.
+# This is the ThinkRail counterpart of gonavi-build.yml.
+# Weekly upstream checks are centralized in .github/workflows/upstream-watch.yml.
 
 on:
   workflow_dispatch:
@@ -13,8 +14,9 @@ on:
         type: string
   push:
     branches: [thinkrail-kylin]
-  schedule:
-    - cron: "0 3 * * 1"
+    paths:
+      - "apps/thinkrail/**"
+      - ".github/workflows/thinkrail-compat.yml"
 
 permissions:
   contents: write
@@ -216,15 +218,15 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p wgpu/dawn
-          cp "$GITHUB_WORKSPACE/third_party/dawn/webgpu.h" wgpu/dawn/webgpu.h
+          cp "$GITHUB_WORKSPACE/apps/thinkrail/third_party/webgpu.h" wgpu/dawn/webgpu.h
           test -s wgpu/dawn/webgpu.h
 
       - name: Apply WebKitGTK 4.0 compatibility patch
         run: |
           set -euo pipefail
           cd electrobun
-          patch -p1 --dry-run < "$GITHUB_WORKSPACE/patches/electrobun-2.0.5-webkit40.patch"
-          patch -p1 < "$GITHUB_WORKSPACE/patches/electrobun-2.0.5-webkit40.patch"
+          patch -p1 --dry-run < "$GITHUB_WORKSPACE/apps/thinkrail/electrobun-2.0.5-webkit40.patch"
+          patch -p1 < "$GITHUB_WORKSPACE/apps/thinkrail/electrobun-2.0.5-webkit40.patch"
 
       - name: Build libNativeWrapper.so against WebKitGTK 4.0
         run: |

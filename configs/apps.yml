@@ -1,6 +1,7 @@
 # 注册表：所有需要兼容构建的软件
-# 新增软件只需：1) 在 configs/ 下创建 <id>.yml  2) 在此注册
-# 定时任务会遍历此列表，逐个检查上游最新 Release 并按需构建
+# 新增软件只需：1) 在 configs/ 下创建 <id>.yml（含 workflow: 字段）
+#              2) 在此注册
+# 定时任务会遍历此列表，检查上游最新 Release 并 dispatch 对应 workflow
 
 apps:
   - id: dbx
@@ -10,4 +11,8 @@ apps:
 
   - id: gonavi
     config: configs/gonavi.yml
+    auto_track: true
+
+  - id: thinkrail
+    config: configs/thinkrail.yml
     auto_track: true

@@ -1,12 +1,14 @@
 app_id: dbx
 upstream_repo: t8y2/dbx
 display_name: DBX
+build_type: tauri-appimage
+workflow: app-build.yml
 
 # !! 前置条件 !!
 # Tauri 2 (wry) 需要 webkit2gtk-4.1 (>=2.40)，但 glibc 2.31 的公共源
 # (bullseye/focal main+security) 均只有 4.0 API —— 已实测确认。
 # 必须先在 Actions 里手动跑一次 "Build Compat Image" 工作流
-# （构建 debian:bullseye + 源码 webkit2gtk-2.40.6 镜像，约 2~3h/架构，仅需一次），
+# （构建 debian:bullseye + 源码 WebKitGTK 2.44.4 镜像，约 2~3h/架构，仅需一次），
 # 产物在 ghcr.io/sondertara/xc-compat-tauri2:{amd64,aarch64}
 container_image: "ghcr.io/sondertara/xc-compat-tauri2:amd64"
 container_image_arm64: "ghcr.io/sondertara/xc-compat-tauri2:aarch64"

@@ -1,7 +1,7 @@
 name: Build Compat Image (glibc 2.31 + webkit2gtk-4.1)
 
 # 构建定制镜像并推送到 ghcr.io（无需本地 Docker，CI 双架构原生构建）
-# 镜像构成：debian:bullseye (glibc 2.31) + 源码编译 glib 2.72 / libsoup3 / WebKitGTK 2.40.6
+# 镜像构成：debian:bullseye (glibc 2.31) + 源码编译 glib 2.72 / libsoup3 / WebKitGTK 2.44.4
 #
 # 触发时机：
 # - 手动（首次部署必跑一次，约 2~3 小时/架构）
