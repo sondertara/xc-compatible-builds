@@ -179,14 +179,34 @@ jobs:
             });
 
       - name: Fetch CEF 156 headers
+        shell: bash
         run: |
           set -euo pipefail
+          exec > >(tee cef.log) 2>&1
           CEF_URL="https://cef-builds.spotifycdn.com/cef_binary_156.0.7%2Bg47dbc1d%2Bchromium-156.0.8078.17_linux64_minimal.tar.bz2"
-          curl -fL --retry 3 --retry-delay 5 -o cef.tar.bz2 "$CEF_URL"
+          echo "GET $CEF_URL"
+          curl -fL --retry 3 --retry-delay 5 -w 'http=%{http_code} size=%{size_download}\n' -o cef.tar.bz2 "$CEF_URL"
           ls -lh cef.tar.bz2
+          tar -tjf cef.tar.bz2 >/dev/null
           mkdir -p cef
           tar -xjf cef.tar.bz2 --strip-components=1 -C cef
           test -f cef/include/cef_app.h
+
+      - name: Publish CEF log
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const p = (process.env.GITHUB_WORKSPACE || '') + '/cef.log';
+            if (!fs.existsSync(p)) return;
+            const log = fs.readFileSync(p, 'utf8').slice(-20000);
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: 'cef failure:\n```\n' + log + '\n```'
+            });
 
       - name: Fetch Dawn webgpu.h
         run: |
