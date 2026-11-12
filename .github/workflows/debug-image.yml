@@ -17,12 +17,12 @@ jobs:
       - name: Build with visible log
         run: |
           set +e
-          docker build --progress=plain -f docker/tauri2-webkit41.Dockerfile . > /tmp/build.log 2>&1
+          docker build --progress=plain -f docker/tauri2-webkit41.Dockerfile . > build-image.log 2>&1
           rc=$?
           {
             echo "### docker build rc=$rc"
             echo '```'
-            tail -n 150 /tmp/build.log
+            tail -n 150 build-image.log
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
           exit 0
@@ -33,8 +33,8 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            let log = 'no build.log';
-            try { log = fs.readFileSync('/tmp/build.log', 'utf8'); } catch (e) {}
+            let log = 'no build.log in ' + process.cwd();
+            try { log = fs.readFileSync('build-image.log', 'utf8'); } catch (e) { log += '\n' + e.message; }
             const tail = log.split('\n').slice(-120).join('\n').slice(-60000);
             await github.rest.repos.createCommitComment({
               owner: context.repo.owner,
