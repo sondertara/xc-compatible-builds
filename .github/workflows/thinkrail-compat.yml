@@ -308,7 +308,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "$GITHUB_WORKSPACE"
-          cp electrobun/libNativeWrapper.so ThinkRail/bin/libNativeWrapper.so
+          cp electrobun/package/libNativeWrapper.so ThinkRail/bin/libNativeWrapper.so
           LD_LIBRARY_PATH="$PWD/ThinkRail/bin" ldd ThinkRail/bin/libNativeWrapper.so | tee ldd.txt
           if grep -q 'not found' ldd.txt; then echo "unresolved shared library"; exit 1; fi
 
