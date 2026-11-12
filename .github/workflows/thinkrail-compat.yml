@@ -229,7 +229,7 @@ jobs:
       - name: Build libNativeWrapper.so against WebKitGTK 4.0
         run: |
           set -euo pipefail
-          cd "$GITHUB_WORKSPACE/electrobun"
+          cd "$GITHUB_WORKSPACE/electrobun/package"
           CXXFLAGS="$(pkg-config --cflags webkit2gtk-4.0 gtk+-3.0 ayatana-appindicator3-0.1)"
           LIBS="$(pkg-config --libs webkit2gtk-4.0 gtk+-3.0 ayatana-appindicator3-0.1)"
           FS=""
@@ -255,7 +255,7 @@ jobs:
           set -euo pipefail
           cd "$GITHUB_WORKSPACE"
           OFFICIAL="ThinkRail/bin/libNativeWrapper.so"
-          REBUILT="electrobun/libNativeWrapper.so"
+          REBUILT="electrobun/package/libNativeWrapper.so"
 
           nm -D --defined-only "$OFFICIAL" | awk '$2=="T"{print $3}' | grep -v '^_Z' | sort > official.txt
           nm -D --defined-only "$REBUILT" | awk '$2=="T"{print $3}' | grep -v '^_Z' | sort > rebuilt.txt

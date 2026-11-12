@@ -1,5 +1,5 @@
---- a/src/native/linux/nativeWrapper.cpp
-+++ b/src/native/linux/nativeWrapper.cpp
+--- a/package/src/native/linux/nativeWrapper.cpp
++++ b/package/src/native/linux/nativeWrapper.cpp
 @@ -3413,7 +3413,7 @@
      
      void evaluateJavaScriptWithNoCompletion(const char* jsString) override {
