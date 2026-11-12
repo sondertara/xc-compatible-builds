@@ -23,6 +23,10 @@ concurrency:
   group: thinkrail-kylin-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   resolve:
     runs-on: ubuntu-latest
