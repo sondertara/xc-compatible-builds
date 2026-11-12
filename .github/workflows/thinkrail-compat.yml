@@ -89,13 +89,35 @@ jobs:
             });
 
       - name: Preflight ABI (glibc 2.31, WebKitGTK 4.0 2.38.x)
+        shell: bash
         run: |
           set -euo pipefail
-          getconf GNU_LIBC_VERSION
+          {
+            getconf GNU_LIBC_VERSION
+            pkg-config --modversion webkit2gtk-4.0
+            pkg-config --modversion gtk+-3.0
+            pkg-config --modversion libsoup-2.4
+          } 2>&1 | tee preflight.log
           test "$(getconf GNU_LIBC_VERSION | awk '{print $2}')" = "2.31"
           WEBKIT="$(pkg-config --modversion webkit2gtk-4.0)"
           echo "webkit2gtk-4.0: $WEBKIT"
           case "$WEBKIT" in 2.38.*) ;; *) echo "expected WebKitGTK 4.0 2.38.x"; exit 1 ;; esac
+
+      - name: Publish preflight log
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const p = (process.env.GITHUB_WORKSPACE || '') + '/preflight.log';
+            if (!fs.existsSync(p)) return;
+            const log = fs.readFileSync(p, 'utf8').slice(-20000);
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: 'preflight failure:\n```\n' + log + '\n```'
+            });
 
       - name: Download upstream app tree
         run: |
