@@ -158,7 +158,6 @@ jobs:
             -o electrobun.tar.gz \
             "https://github.com/blackboardsh/electrobun/archive/refs/tags/v2.0.5.tar.gz"
           ls -lh electrobun.tar.gz
-          tar -tzf electrobun.tar.gz | head -5
           tar -xzf electrobun.tar.gz
           ls -d electrobun*
           mv electrobun-2.0.5 electrobun
