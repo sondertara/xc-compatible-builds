@@ -13,6 +13,13 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PKG_CONFIG_PATH=/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/aarch64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig \
     LIBRARY_PATH=/usr/local/lib:/usr/local/lib/x86_64-linux-gnu:/usr/local/lib/aarch64-linux-gnu
 
+# bullseye 已是 oldoldstable；deb.debian.org 的 bullseye-security 索引仍指向
+# 已被清理的 pool 文件（404），apt 会整体失败。archive.debian.org 保留完整
+# bullseye/bullseye-security 包，因此这里固定到归档源。
+RUN rm -f /etc/apt/sources.list.d/* \
+    && printf 'deb http://archive.debian.org/debian bullseye main\n' > /etc/apt/sources.list \
+    && printf 'deb http://archive.debian.org/debian-security bullseye-security main\n' >> /etc/apt/sources.list
+
 # ---- 基础工具 + WebKitGTK/Tauri 编译依赖 ----
 # 注意：apt 参数列表内不能夹注释——Dockerfile 的反斜杠续行会把注释交给
 # shell，第一个 # 之后整段包名都会被当成注释丢掉（曾导致 pip3 缺失）。
@@ -27,7 +34,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # - libsystemd: JOURNALD_LOG
 # - libnghttp2/libpsl/libbrotli: libsoup3 硬依赖
 # - libayatana-appindicator3/librsvg/xdo/ssl/secret: Tauri 运行/链接依赖
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get -o Acquire::Check-Valid-Until=false update && apt-get install -y --no-install-recommends \
     ca-certificates curl xz-utils git python3 python3-pip \
     build-essential pkg-config ninja-build ccache file locales tzdata sudo \
     ruby ruby-dev \
