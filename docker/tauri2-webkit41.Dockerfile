@@ -85,7 +85,15 @@ RUN curl -fsSL https://download.gnome.org/sources/libsoup/3.2/libsoup-3.2.3.tar.
 
 # ---- 3. WebKitGTK 2.44.4（提供 webkit2gtk-4.1 API；2.44 系列有完整 cookie API）----
 # 启用必要组件，关闭不必要的组件控制编译时长与依赖面
-RUN curl -fsSL https://webkitgtk.org/releases/webkitgtk-2.44.4.tar.xz | tar xJ -C /tmp \
+# 2021 版 bullseye ca-certificates 对 webkitgtk.org 当前证书链可能缺根证书，
+# 而镜像里没有更近的 CA 包。用 -k 关闭 TLS 校验，但立刻用固定 SHA256 校验内容；
+# 同时把 curl 与 tar 拆成两步，避免管道掩盖 curl 的真实退出码。
+RUN curl -k -fsSL --retry 3 --retry-delay 5 \
+        https://webkitgtk.org/releases/webkitgtk-2.44.4.tar.xz \
+        -o /tmp/webkitgtk-2.44.4.tar.xz \
+    && echo "2ce4ec1b78413035037aba8326b31ed72696626b7bea7bace5e46ac0d8cbe796  /tmp/webkitgtk-2.44.4.tar.xz" | sha256sum -c - \
+    && tar xJf /tmp/webkitgtk-2.44.4.tar.xz -C /tmp \
+    && rm -f /tmp/webkitgtk-2.44.4.tar.xz \
     && cd /tmp/webkitgtk-2.44.4 \
     && cmake -B _build -GNinja -DCMAKE_BUILD_TYPE=Release -DPORT=GTK \
        -DCMAKE_INSTALL_PREFIX=/usr/local \
