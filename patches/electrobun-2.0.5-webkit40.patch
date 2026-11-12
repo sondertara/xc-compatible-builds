@@ -45,3 +45,39 @@
              fileSize = contents.size();
              foundFile = true;
          }
+--- a/package/src/native/linux/nativeWrapper.cpp	2026-11-12 17:50:33.276571870 +0800
++++ b/package/src/native/linux/nativeWrapper.cpp	2026-11-12 17:50:33.288202548 +0800
+@@ -12620,10 +12620,17 @@
+             json << "\"secure\":" << (soup_cookie_get_secure(cookie) ? "true" : "false") << ",";
+             json << "\"httpOnly\":" << (soup_cookie_get_http_only(cookie) ? "true" : "false");
+ 
++#if SOUP_MAJOR_VERSION >= 3
+             GDateTime* expires = soup_cookie_get_expires(cookie);
+             if (expires) {
+                 json << ",\"expirationDate\":" << g_date_time_to_unix(expires);
+             }
++#else
++            SoupDate* expires = soup_cookie_get_expires(cookie);
++            if (expires) {
++                json << ",\"expirationDate\":" << expires->time;
++            }
++#endif
+ 
+             json << "}";
+ 
+@@ -12815,9 +12822,15 @@
+         soup_cookie_set_http_only(cookie, httpOnly);
+ 
+         if (expirationDate > 0) {
++#if SOUP_MAJOR_VERSION >= 3
+             GDateTime* expires = g_date_time_new_from_unix_utc((gint64)expirationDate);
+             soup_cookie_set_expires(cookie, expires);
+             g_date_time_unref(expires);
++#else
++            SoupDate* expires = soup_date_new_from_time_t((time_t)expirationDate);
++            soup_cookie_set_expires(cookie, expires);
++            soup_date_free(expires);
++#endif
+         }
+ 
+         std::string result = "false";
