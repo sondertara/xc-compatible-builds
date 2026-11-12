@@ -27,18 +27,19 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           exit 0
 
-      - name: Publish log as commit comment
+      - name: Publish log to debug branch
         if: always()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            let log = 'no build.log in ' + process.cwd();
-            try { log = fs.readFileSync('build-image.log', 'utf8'); } catch (e) { log += '\n' + e.message; }
-            const tail = log.split('\n').slice(-120).join('\n').slice(-60000);
-            await github.rest.repos.createCommitComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              commit_sha: context.sha,
-              body: '### debug image build\n\n```\n' + tail + '\n```'
-            });
+        run: |
+          set -euo pipefail
+          if [ -f build-image.log ]; then
+            tail -n 400 build-image.log > debug-image.log
+          else
+            echo "build-image.log missing; pwd=$(pwd)" > debug-image.log
+            ls -la >> debug-image.log
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B debug-logs
+          git add -f debug-image.log
+          git commit -m "debug image log ${GITHUB_RUN_ID}" || true
+          git push -f origin HEAD:debug-logs
