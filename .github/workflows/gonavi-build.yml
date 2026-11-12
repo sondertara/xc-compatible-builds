@@ -166,9 +166,15 @@ jobs:
 
       - name: Build Wails binary
         run: |
-          set -euo pipefail
+          set +e
           VERSION="${{ needs.resolve.outputs.version }}"
-          wails build -s -skipbindings -trimpath -platform linux/${{ matrix.goarch }} -clean -o GoNavi -ldflags "-s -w -X GoNavi-Wails/internal/app.AppVersion=${VERSION}"
+          wails build -s -skipbindings -trimpath -platform linux/${{ matrix.goarch }} -clean -o GoNavi -ldflags "-s -w -X GoNavi-Wails/internal/app.AppVersion=${VERSION}" 2>&1 | tee wails-build.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            echo "::error::wails build failed with exit $status"
+            tail -n 40 wails-build.log | sed 's/^/::error::/'
+            exit "$status"
+          fi
           # wails -o is relative to build/bin, so output is build/bin/GoNavi
           ls -la build/bin/
           test -f build/bin/GoNavi
