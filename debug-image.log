@@ -1,0 +1,400 @@
+#12 8454.9 [6884/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/UIProcess/gtk/AcceleratedBackingStore.cpp.o
+#12 8455.6 [6885/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-88d1702b-29.cpp.o
+#12 8455.7 [6886/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-88d1702b-30.cpp.o
+#12 8458.0 [6887/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/UIProcess/gtk/ClipboardGtk4.cpp.o
+#12 8462.4 [6888/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-88d1702b-26.cpp.o
+#12 8463.6 [6889/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/UIProcess/gtk/ClipboardGtk3.cpp.o
+#12 8466.1 [6890/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/UIProcess/gtk/PointerLockManagerWayland.cpp.o
+#12 8468.3 [6891/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/UIProcess/gtk/PointerLockManager.cpp.o
+#12 8469.9 [6892/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/UIProcess/gtk/PointerLockManagerX11.cpp.o
+#12 8471.7 [6893/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/UIProcess/gtk/ScreenManagerGtk.cpp.o
+#12 8472.6 [6894/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/UIProcess/gtk/AcceleratedBackingStoreDMABuf.cpp.o
+#12 8474.1 [6895/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/UIProcess/gtk/ViewSnapshotStoreGtk3.cpp.o
+#12 8475.7 [6896/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/UIProcess/gtk/ViewSnapshotStoreGtk4.cpp.o
+#12 8483.2 [6897/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/UIProcess/gtk/TextCheckerGtk.cpp.o
+#12 8495.7 [6898/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-88d1702b-31.cpp.o
+#12 8498.7 [6899/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-88d1702b-32.cpp.o
+#12 8500.8 [6900/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/UIProcess/gtk/WebPageProxyGtk.cpp.o
+#12 8509.4 [6901/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-88d1702b-33.cpp.o
+#12 8522.3 [6902/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-3.cpp.o
+#12 8526.6 [6903/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-4.cpp.o
+#12 8528.7 [6904/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-5.cpp.o
+#12 8530.6 [6905/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-6.cpp.o
+#12 8532.6 [6906/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-7.cpp.o
+#12 8534.6 [6907/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-8.cpp.o
+#12 8536.5 [6908/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/GPU/media/RemoteMediaPlayerMIMETypeCache.cpp.o
+#12 8538.6 [6909/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-9.cpp.o
+#12 8539.4 [6910/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/Automation/WebAutomationSessionProxy.cpp.o
+#12 8551.5 [6911/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-2.cpp.o
+#12 8553.8 [6912/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-10.cpp.o
+#12 8560.3 [6913/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-1.cpp.o
+#12 8563.5 [6914/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/InjectedBundle/API/glib/WebKitConsoleMessage.cpp.o
+#12 8569.8 [6915/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-11.cpp.o
+#12 8574.1 [6916/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/InjectedBundle/API/glib/WebKitScriptWorld.cpp.o
+#12 8587.6 [6917/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/InjectedBundle/API/glib/WebKitFrame.cpp.o
+#12 8594.9 [6918/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-13.cpp.o
+#12 8597.9 [6919/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-12.cpp.o
+#12 8599.3 [6920/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/InjectedBundle/API/glib/WebKitWebEditor.cpp.o
+#12 8603.5 [6921/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/InjectedBundle/API/glib/WebProcessExtensionManager.cpp.o
+#12 8605.3 [6922/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/InjectedBundle/API/glib/WebKitWebFormManager.cpp.o
+#12 8614.8 [6923/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/InjectedBundle/API/glib/DOM/WebKitDOMDocument.cpp.o
+#12 8615.6 [6924/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/InjectedBundle/API/glib/DOM/DOMObjectCache.cpp.o
+#12 8617.0 [6925/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/InjectedBundle/API/glib/WebKitWebHitTestResult.cpp.o
+#12 8619.5 [6926/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/InjectedBundle/API/glib/DOM/WebKitDOMObject.cpp.o
+#12 8625.1 [6927/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/InjectedBundle/API/glib/DOM/WebKitDOMElement.cpp.o
+#12 8629.5 [6928/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/InjectedBundle/API/glib/DOM/WebKitDOMPrivate.cpp.o
+#12 8631.3 [6929/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/InjectedBundle/API/glib/WebKitWebPage.cpp.o
+#12 8632.7 [6930/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/InjectedBundle/API/glib/DOM/WebKitDOMNode.cpp.o
+#12 8651.9 [6931/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-15.cpp.o
+#12 8654.2 [6932/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-16.cpp.o
+#12 8664.6 [6933/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-17.cpp.o
+#12 8666.5 [6934/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-14.cpp.o
+#12 8684.8 [6935/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-19.cpp.o
+#12 8685.5 [6936/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-18.cpp.o
+#12 8696.5 [6937/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-20.cpp.o
+#12 8698.5 [6938/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-21.cpp.o
+#12 8715.1 [6939/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-22.cpp.o
+#12 8717.0 [6940/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-23.cpp.o
+#12 8729.7 [6941/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-25.cpp.o
+#12 8730.9 [6942/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-24.cpp.o
+#12 8747.5 [6943/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-26.cpp.o
+#12 8749.2 [6944/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-27.cpp.o
+#12 8758.2 [6945/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/InjectedBundle/DOM/InjectedBundleNodeHandle.cpp.o
+#12 8759.9 [6946/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/InjectedBundle/DOM/InjectedBundleRangeHandle.cpp.o
+#12 8782.9 [6947/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-29.cpp.o
+#12 8788.2 [6948/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/Network/WebSocketChannel.cpp.o
+#12 8794.6 [6949/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-28.cpp.o
+#12 8802.3 [6950/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-32.cpp.o
+#12 8813.3 [6951/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-30.cpp.o
+#12 8828.2 [6952/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-31.cpp.o
+#12 8831.0 [6953/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-33.cpp.o
+#12 8855.4 [6954/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-35.cpp.o
+#12 8859.0 [6955/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-34.cpp.o
+#12 8888.2 [6956/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-36.cpp.o
+#12 8889.6 [6957/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-37.cpp.o
+#12 8898.3 [6958/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-38.cpp.o
+#12 8900.2 [6959/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-39.cpp.o
+#12 8931.0 [6960/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-41.cpp.o
+#12 8934.5 [6961/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-40.cpp.o
+#12 8958.2 [6962/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-42.cpp.o
+#12 8958.9 [6963/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/WebPage/dmabuf/AcceleratedSurfaceDMABuf.cpp.o
+#12 8980.3 [6964/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/WebProcess/WebPage/WebPage.cpp.o
+#12 8981.2 [6965/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-43.cpp.o
+#12 8983.8 [6966/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-45.cpp.o
+#12 8991.5 [6967/6974] Building CXX object Source/WebKit/CMakeFiles/webkit2gtkinjectedbundle.dir/WebProcess/InjectedBundle/API/glib/WebKitInjectedBundleMain.cpp.o
+#12 8997.5 [6968/6974] Building CXX object Source/WebKit/CMakeFiles/WebKit.dir/__/__/DerivedSources/WebKit/unified-sources/UnifiedSource-54928a2b-44.cpp.o
+#12 9004.2 [6969/6974] Linking CXX shared library lib/libwebkit2gtk-4.1.so.0.13.8
+#12 9004.2 [6970/6974] Creating library symlink lib/libwebkit2gtk-4.1.so.0 lib/libwebkit2gtk-4.1.so
+#12 9004.3 [6971/6974] Linking CXX shared module lib/libwebkit2gtkinjectedbundle.so
+#12 9004.4 [6972/6974] Linking CXX executable bin/WebKitNetworkProcess
+#12 9004.5 [6973/6974] Linking CXX executable bin/WebKitWebProcess
+#12 9004.5 [6973/6974] Install the project...
+#12 9004.5 -- Install configuration: "Release"
+#12 9004.5 -- Installing: /usr/local/lib/pkgconfig/javascriptcoregtk-4.1.pc
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/JavaScriptCore/JSBase.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/JavaScriptCore/JSContextRef.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/JavaScriptCore/JSObjectRef.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/JavaScriptCore/JSStringRef.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/JavaScriptCore/JSTypedArray.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/JavaScriptCore/JSValueRef.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/JavaScriptCore/JavaScript.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/JavaScriptCore/WebKitAvailability.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/jsc/JSCOptions.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/jsc/JSCVersion.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/jsc/JSCAutocleanups.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/jsc/JSCClass.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/jsc/JSCContext.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/jsc/JSCDefines.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/jsc/JSCException.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/jsc/JSCValue.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/jsc/JSCVirtualMachine.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/jsc/JSCWeakValue.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/jsc/jsc.h
+#12 9004.5 -- Installing: /usr/local/lib/libjavascriptcoregtk-4.1.so.0.5.8
+#12 9004.5 -- Installing: /usr/local/lib/libjavascriptcoregtk-4.1.so.0
+#12 9004.5 -- Installing: /usr/local/lib/libjavascriptcoregtk-4.1.so
+#12 9004.5 -- Installing: /usr/local/libexec/webkit2gtk-4.1/jsc
+#12 9004.5 -- Set non-toolchain portion of runtime path of "/usr/local/libexec/webkit2gtk-4.1/jsc" to ""
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/webkitdomautocleanups.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/webkitdomdefines.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/webkitdom.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMAttr.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMBlob.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMCDATASection.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMCharacterData.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMClientRect.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMClientRectList.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMComment.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMCSSRule.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMCSSRuleList.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMCSSStyleDeclaration.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMCSSStyleSheet.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMCSSValue.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMCustom.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMCustomUnstable.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMDeprecated.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMDocument.h
+#12 9004.5 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMDocumentFragment.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMDocumentFragmentUnstable.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMDocumentType.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMDocumentUnstable.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMDOMImplementation.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMDOMSelection.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMDOMTokenList.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMDOMWindow.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMDOMWindowUnstable.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMElementUnstable.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMEvent.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMEventTarget.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMFile.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMFileList.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLAnchorElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLAppletElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLAreaElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLBaseElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLBodyElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLBRElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLButtonElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLCanvasElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLCollection.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLDirectoryElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLDivElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLDListElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLDocument.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLElementUnstable.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLEmbedElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLFieldSetElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLFontElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLFormElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLFrameElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLFrameSetElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLHeadElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLHeadingElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLHRElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLHtmlElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLIFrameElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLImageElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLInputElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLLabelElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLLegendElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLLIElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLLinkElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLMapElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLMarqueeElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLMenuElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLMetaElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLModElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLObjectElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLOListElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLOptGroupElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLOptionElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLOptionsCollection.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLParagraphElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLParamElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLPreElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLQuoteElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLScriptElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLSelectElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLStyleElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLTableCaptionElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLTableCellElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLTableColElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLTableElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLTableRowElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLTableSectionElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLTextAreaElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLTitleElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMHTMLUListElement.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMKeyboardEvent.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMMediaList.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMMouseEvent.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMNamedNodeMap.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMNode.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMNodeFilter.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMNodeIterator.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMNodeList.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMObject.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMProcessingInstruction.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMRange.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMRangeUnstable.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMStyleSheet.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMStyleSheetList.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMText.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMTreeWalker.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMUIEvent.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMWheelEvent.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMXPathExpression.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMXPathNSResolver.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkitdom/WebKitDOMXPathResult.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit2/webkit2.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit2/webkit-web-extension.h
+#12 9004.6 -- Installing: /usr/local/lib/webkit2gtk-4.1/injected-bundle/libwebkit2gtkinjectedbundle.so
+#12 9004.6 -- Set non-toolchain portion of runtime path of "/usr/local/lib/webkit2gtk-4.1/injected-bundle/libwebkit2gtkinjectedbundle.so" to ""
+#12 9004.6 -- Installing: /usr/local/lib/pkgconfig/webkit2gtk-4.1.pc
+#12 9004.6 -- Installing: /usr/local/lib/pkgconfig/webkit2gtk-web-extension-4.1.pc
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitEnumTypes.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitVersion.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitApplicationInfo.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitAuthenticationRequest.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitAutocleanups.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitAutomationSession.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitBackForwardList.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitBackForwardListItem.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitClipboardPermissionRequest.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitCredential.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitContextMenu.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitContextMenuActions.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitContextMenuItem.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitCookieManager.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitDefines.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitDeviceInfoPermissionRequest.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitDownload.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitEditingCommands.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitEditorState.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitError.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitFaviconDatabase.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitFeature.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitFileChooserRequest.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitFindController.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitFormSubmissionRequest.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitGeolocationManager.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitGeolocationPermissionRequest.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitHitTestResult.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitInputMethodContext.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitInstallMissingMediaPluginsPermissionRequest.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitMediaKeySystemPermissionRequest.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitMemoryPressureSettings.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitNavigationAction.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitNavigationPolicyDecision.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitNetworkProxySettings.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitNotificationPermissionRequest.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitNotification.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitOptionMenu.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitOptionMenuItem.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitPermissionRequest.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitPermissionStateQuery.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitPolicyDecision.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitResponsePolicyDecision.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitScriptDialog.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitSecurityManager.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitSecurityOrigin.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitSettings.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitURIRequest.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitURIResponse.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitURISchemeRequest.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitURISchemeResponse.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitURIUtilities.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitUserContent.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitUserContentFilterStore.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitUserContentManager.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitUserMediaPermissionRequest.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitUserMessage.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebContext.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebResource.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebView.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebViewSessionState.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebsiteData.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebsiteDataAccessPermissionRequest.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebsiteDataManager.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWindowProperties.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebsitePolicies.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitColorChooserRequest.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitPointerLockPermissionRequest.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitPrintOperation.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebInspector.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebViewBase.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitJavascriptResult.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitMimeInfo.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitPlugin.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitPrintCustomWidget.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebProcessEnumTypes.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitConsoleMessage.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitFrame.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitScriptWorld.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebEditor.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebFormManager.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebHitTestResult.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebPage.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebExtension.h
+#12 9004.6 -- Installing: /usr/local/include/webkitgtk-4.1/webkit/WebKitWebExtensionAutocleanups.h
+#12 9004.6 -- Installing: /usr/local/lib/libwebkit2gtk-4.1.so.0.13.8
+#12 9004.8 -- Installing: /usr/local/lib/libwebkit2gtk-4.1.so.0
+#12 9004.8 -- Set non-toolchain portion of runtime path of "/usr/local/lib/libwebkit2gtk-4.1.so.0.13.8" to ""
+#12 9004.8 -- Installing: /usr/local/lib/libwebkit2gtk-4.1.so
+#12 9004.8 -- Installing: /usr/local/libexec/webkit2gtk-4.1/WebKitWebProcess
+#12 9004.8 -- Set non-toolchain portion of runtime path of "/usr/local/libexec/webkit2gtk-4.1/WebKitWebProcess" to ""
+#12 9004.8 -- Installing: /usr/local/libexec/webkit2gtk-4.1/WebKitNetworkProcess
+#12 9004.8 -- Set non-toolchain portion of runtime path of "/usr/local/libexec/webkit2gtk-4.1/WebKitNetworkProcess" to ""
+#12 9004.8 -- Installing: /usr/local/share/locale/ar/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/as/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/bg/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/ca/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/cs/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/da/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/de/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/el/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/en_CA/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/en_GB/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/eo/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/es/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/et/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/eu/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/fi/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/fr/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/gl/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/gu/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/he/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/hi/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/hr/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/hu/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/id/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/it/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/ja/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/ka/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/kn/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/ko/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/lt/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/lv/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/ml/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/mr/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/nb/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/nl/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/or/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/pa/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/pl/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/pt/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/pt_BR/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/ro/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/ru/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/sl/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/sr/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/sr@latin/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/sv/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/ta/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/te/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/tr/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/uk/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/vi/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9004.8 -- Installing: /usr/local/share/locale/zh_CN/LC_MESSAGES/WebKitGTK-4.1.mo
+#12 9008.5 2.44.4
+#12 9008.5 webkit2gtk-4.1 OK
+#12 DONE 9008.7s
+
+#13 [9/9] RUN set -eu     && ldd --version | head -1 | grep -q 2.31     && [ "$(printf "2.40n$(pkg-config --modversion webkit2gtk-4.1)" | sort -V | tail -1)" != "2.40" ]     && SO=$(ls /usr/local/lib/libwebkit2gtk-4.1.so.0* | head -1)     && MAXSYM=$(strings "$SO" | grep -oE "GLIBC_[0-9.]+" | sort -Vu | tail -1 | cut -d_ -f2)     && echo "libwebkit2gtk-4.1.so max GLIBC symbol: $MAXSYM"     && [ "$(printf "2.31n$MAXSYM" | sort -V | tail -1)" = "2.31" ]     && echo "OK: glibc 2.31 + webkit2gtk-4.1 (symbols <= 2.31) ready"
+#13 0.989 libwebkit2gtk-4.1.so max GLIBC symbol: 2.30
+#13 0.990 OK: glibc 2.31 + webkit2gtk-4.1 (symbols <= 2.31) ready
+#13 DONE 1.0s
+
+#14 exporting to image
+#14 exporting layers
+#14 exporting layers 43.5s done
+#14 exporting manifest sha256:5683b0d1958d185e51d6b9e46a81dd321989f5bfb2f00befa7efe9455aec54ba done
+#14 exporting config sha256:bfe4000ffba6f861ceea2026caf7a8fea67fbec4994e22c25013d6b1a26a8e67 done
+#14 exporting attestation manifest sha256:a00746d530e848391d182a6f8bcb0fe4c858916de0ed528d860ea6b1b1d47b4a done
+#14 exporting manifest list sha256:d3b283f2c52db4298b271d1c35473e84c6510df3062edf608dff4cdb176fcdd9 done
+#14 naming to moby-dangling@sha256:d3b283f2c52db4298b271d1c35473e84c6510df3062edf608dff4cdb176fcdd9 done
+#14 unpacking to moby-dangling@sha256:d3b283f2c52db4298b271d1c35473e84c6510df3062edf608dff4cdb176fcdd9
+#14 unpacking to moby-dangling@sha256:d3b283f2c52db4298b271d1c35473e84c6510df3062edf608dff4cdb176fcdd9 11.2s done
+#14 DONE 54.7s
