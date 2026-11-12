@@ -1,0 +1,41 @@
+name: Debug apt
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/debug-apt.yml"
+
+jobs:
+  apt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Try the exact apt command
+        run: |
+          set +e
+          docker run --rm debian:bullseye bash -c '
+            set -x
+            apt-get update
+            apt-get install -y --no-install-recommends \
+              ca-certificates curl xz-utils git python3 python3-pip \
+              build-essential pkg-config ninja-build ccache file locales tzdata sudo \
+              ruby ruby-dev gperf bison flex perl gettext unifdef \
+              meson libffi-dev zlib1g-dev libpcre2-dev libmount-dev \
+              cmake libxml2-dev libxslt1-dev libsqlite3-dev libgnutls28-dev \
+              libicu-dev libgcrypt20-dev libtasn1-dev \
+              libgtk-3-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+              libhyphen-dev libwebp-dev libjpeg62-turbo-dev libpng-dev \
+              libavif-dev libopus-dev libwoff-dev \
+              libegl1-mesa-dev libgles2-mesa-dev libgl1-mesa-dri \
+              libcairo2-dev libfontconfig1-dev libfreetype6-dev libharfbuzz-dev \
+              libepoxy-dev libgbm-dev libdrm-dev liblcms2-dev \
+              libxcomposite-dev libxdamage-dev libxrender-dev libxt-dev \
+              libenchant-2-dev libsystemd-dev \
+              libnghttp2-dev libpsl-dev libbrotli-dev \
+              libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev \
+              libsecret-1-dev xdg-utils patchelf
+          ' > apt.log 2>&1
+          rc=$?
+          echo "apt exit=$rc"
+          tail -n 60 apt.log | sed 's/^/::error::/'
+          exit 0
