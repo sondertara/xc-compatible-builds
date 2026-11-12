@@ -120,14 +120,34 @@ jobs:
             });
 
       - name: Download upstream app tree
+        shell: bash
         run: |
           set -euo pipefail
+          exec > >(tee download.log) 2>&1
           ASSET="stable-linux-x64-ThinkRail-${VERSION}.tar.zst"
           URL="https://github.com/JetBrains/thinkrail/releases/download/${TAG}/${ASSET}"
+          echo "GET $URL"
           curl -fL --retry 3 --retry-delay 5 -o thinkrail.tar.zst "$URL"
           ls -lh thinkrail.tar.zst
           zstd -dc thinkrail.tar.zst | tar -xf - -C .
+          ls -l ThinkRail/bin/launcher
           test -x ThinkRail/bin/launcher
+
+      - name: Publish download log
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const p = (process.env.GITHUB_WORKSPACE || '') + '/download.log';
+            if (!fs.existsSync(p)) return;
+            const log = fs.readFileSync(p, 'utf8').slice(-20000);
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: 'download failure:\n```\n' + log + '\n```'
+            });
 
       - name: Fetch Electrobun 2.0.5 source
         run: |
