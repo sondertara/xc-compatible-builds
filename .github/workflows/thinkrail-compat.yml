@@ -150,13 +150,34 @@ jobs:
             });
 
       - name: Fetch Electrobun 2.0.5 source
+        shell: bash
         run: |
           set -euo pipefail
-          curl -fL --retry 3 --retry-delay 5 \
+          exec > >(tee electrobun.log) 2>&1
+          curl -fL --retry 3 --retry-delay 5 -w 'http=%{http_code}\n' \
             -o electrobun.tar.gz \
             "https://github.com/blackboardsh/electrobun/archive/refs/tags/v2.0.5.tar.gz"
+          ls -lh electrobun.tar.gz
+          tar -tzf electrobun.tar.gz | head -5
           tar -xzf electrobun.tar.gz
+          ls -d electrobun*
           mv electrobun-2.0.5 electrobun
+
+      - name: Publish electrobun log
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const p = (process.env.GITHUB_WORKSPACE || '') + '/electrobun.log';
+            if (!fs.existsSync(p)) return;
+            const log = fs.readFileSync(p, 'utf8').slice(-20000);
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: 'electrobun failure:\n```\n' + log + '\n```'
+            });
 
       - name: Fetch CEF 156 headers
         run: |
