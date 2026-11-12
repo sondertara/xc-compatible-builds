@@ -17,6 +17,10 @@
 不是所有应用都能套 `template.yml`。Tauri 之外的路径需要自己的入口 workflow，
 但都通过同一个清单字段 `workflow:` 接入每周巡检。
 
+> **Wails 的坑**：上游 `wails.json` 可能把 `build:tags` 钉在 `webkit2_41`
+> （面向 Ubuntu 22.04+）。`gonavi-build.yml` 在构建前清空该字段，否则 focal
+> 的 WebKitGTK 4.0 头文件会编译失败；Wails CLI 版本则从 `go.mod` 读取。
+
 ## 工作流一览
 
 | 工作流 | 作用 | 触发 |

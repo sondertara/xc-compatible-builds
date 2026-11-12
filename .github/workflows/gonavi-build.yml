@@ -11,11 +11,6 @@ on:
         description: "指定版本 tag（如 v0.9.4），留空跟踪上游最新 Release"
         required: false
         default: ""
-  push:
-    branches: [thinkrail-kylin]
-    paths:
-      - "configs/gonavi.yml"
-      - ".github/workflows/gonavi-build.yml"
 
 permissions:
   contents: write

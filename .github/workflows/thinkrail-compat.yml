@@ -12,11 +12,6 @@ on:
         description: "ThinkRail version (e.g. 0.3.2) or tag (v0.3.2); empty = latest release"
         required: false
         type: string
-  push:
-    branches: [thinkrail-kylin]
-    paths:
-      - "apps/thinkrail/**"
-      - ".github/workflows/thinkrail-compat.yml"
 
 permissions:
   contents: write
