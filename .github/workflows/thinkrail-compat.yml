@@ -229,6 +229,7 @@ jobs:
       - name: Build libNativeWrapper.so against WebKitGTK 4.0
         run: |
           set -euo pipefail
+          exec > >(tee build.log) 2>&1
           cd "$GITHUB_WORKSPACE/electrobun/package"
           CXXFLAGS="$(pkg-config --cflags webkit2gtk-4.0 gtk+-3.0 ayatana-appindicator3-0.1)"
           LIBS="$(pkg-config --libs webkit2gtk-4.0 gtk+-3.0 ayatana-appindicator3-0.1)"
@@ -249,6 +250,22 @@ jobs:
             nativeWrapper.o wayland_screen_capture.o wayland_pipewire_capture.o \
             "$GITHUB_WORKSPACE/ThinkRail/bin/libasar.so" \
             $LIBS -ldl -lpthread $FS
+
+      - name: Publish build log
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const p = (process.env.GITHUB_WORKSPACE || '') + '/build.log';
+            if (!fs.existsSync(p)) return;
+            const log = fs.readFileSync(p, 'utf8').slice(-40000);
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: 'build failure:\n```\n' + log + '\n```'
+            });
 
       - name: Verify ABI and exports
         run: |
