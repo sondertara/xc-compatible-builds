@@ -168,7 +168,20 @@ jobs:
         run: |
           set +e
           VERSION="${{ needs.resolve.outputs.version }}"
-          wails build -s -skipbindings -trimpath -tags webkit2_40 -platform linux/${{ matrix.goarch }} -clean -o GoNavi -ldflags "-s -w -X GoNavi-Wails/internal/app.AppVersion=${VERSION}" 2>&1 | tee wails-build.log
+          # Upstream pins build:tags=webkit2_41 (Ubuntu 22.04+). Wails appends
+          # user tags to project tags, so the only safe override is clearing
+          # the project setting: empty tags = the default WebKitGTK 4.0 path.
+          python3 - <<'PY'
+          import json
+          p = "wails.json"
+          with open(p, encoding="utf-8") as f:
+              data = json.load(f)
+          data["build:tags"] = ""
+          with open(p, "w", encoding="utf-8") as f:
+              json.dump(data, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+          PY
+          wails build -s -skipbindings -trimpath -platform linux/${{ matrix.goarch }} -clean -o GoNavi -ldflags "-s -w -X GoNavi-Wails/internal/app.AppVersion=${VERSION}" 2>&1 | tee wails-build.log
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
             echo "::error::wails build failed with exit $status"
