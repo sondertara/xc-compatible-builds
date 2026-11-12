@@ -114,6 +114,7 @@ RUN curl -k -fsSL --retry 3 --retry-delay 5 \
        -DUSE_OPENJPEG=OFF \
        -DUSE_AVIF=OFF \
        -DUSE_GTK4=OFF \
+       -DUSE_LIBBACKTRACE=OFF \
        -DUSE_SOUP2=OFF \
        -DUSE_JPEGXL=OFF \
        -DUSE_SKIA=OFF \
