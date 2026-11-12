@@ -1,0 +1,47 @@
+--- a/src/native/linux/nativeWrapper.cpp
++++ b/src/native/linux/nativeWrapper.cpp
+@@ -3413,7 +3413,7 @@
+     
+     void evaluateJavaScriptWithNoCompletion(const char* jsString) override {
+         if (webview && jsString) {
+-            webkit_web_view_evaluate_javascript(WEBKIT_WEB_VIEW(webview), jsString, -1, nullptr, nullptr, nullptr, nullptr, nullptr);
++            webkit_web_view_run_javascript(WEBKIT_WEB_VIEW(webview), jsString, nullptr, nullptr, nullptr);
+         }
+     }
+     
+@@ -6302,7 +6302,7 @@
+         g_error_free(error);
+         return;
+     }
+-    gchar* contents = static_cast<gchar*>(g_memdup2(data.data(), data.size()));
++    gchar* contents = static_cast<gchar*>(g_memdup(data.data(), (guint)data.size()));
+     finishSchemeResponse(request, contents, data.size(), getMimeTypeFromUrl(relative).c_str());
+ }
+ 
+@@ -6396,7 +6396,7 @@
+     if (!viewsRootPath.empty()) {
+         std::string contents;
+         if (readContainedFile(viewsRootPath, fullPath, contents)) {
+-            fileContents = static_cast<gchar*>(g_memdup2(contents.data(), contents.size()));
++            fileContents = static_cast<gchar*>(g_memdup(contents.data(), (guint)contents.size()));
+             fileSize = contents.size();
+             foundFile = true;
+         }
+@@ -6436,7 +6436,7 @@
+                 if (fileData && asarFileSize > 0) {
+                     fflush(stdout);
+                     // Copy the data (glib will free it)
+-                    fileContents = (gchar*)g_memdup2(fileData, asarFileSize);
++                    fileContents = (gchar*)g_memdup(fileData, (guint)asarFileSize);
+                     fileSize = asarFileSize;
+                     foundFile = true;
+                     // Free the ASAR buffer before releasing the lock
+@@ -6456,7 +6456,7 @@
+         gchar* viewsDir = g_build_filename(resourcesDir, "app", "views", nullptr);
+         std::string contents;
+         if (readContainedFile(viewsDir, fullPath, contents)) {
+-            fileContents = static_cast<gchar*>(g_memdup2(contents.data(), contents.size()));
++            fileContents = static_cast<gchar*>(g_memdup(contents.data(), (guint)contents.size()));
+             fileSize = contents.size();
+             foundFile = true;
+         }

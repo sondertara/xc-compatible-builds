@@ -1,0 +1,22 @@
+# ThinkRail is an Electrobun app, not a Tauri app.
+# Built by .github/workflows/thinkrail-compat.yml (not app-build.yml).
+#
+# Target: Kylin V10 / glibc 2.31 / libwebkit2gtk-4.0-37 (WebKitGTK 2.38.6).
+# Upstream ships a prebuilt app tree; the only native artifact rebuilt here is
+# libNativeWrapper.so, compiled against WebKitGTK 4.0 + libsoup2.4.
+app_id: thinkrail
+upstream_repo: JetBrains/thinkrail
+display_name: ThinkRail
+
+container_image: "ubuntu:20.04"
+container_image_arm64: ""
+
+build_deps: >
+  libwebkit2gtk-4.0-dev libgtk-3-dev libayatana-appindicator3-dev
+  libx11-dev libxext-dev libxrender-dev libxcomposite-dev libxdamage-dev
+  build-essential pkg-config patchelf bzip2 zstd
+
+# Upstream artifact is a prebuilt tar.zst; the custom workflow handles it.
+install_command: "true"
+build_command: "See .github/workflows/thinkrail-compat.yml"
+artifact_name: "ThinkRail-{version}-linux-{arch}-kylin.tar.gz"

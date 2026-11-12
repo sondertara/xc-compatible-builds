@@ -1,0 +1,260 @@
+name: ThinkRail Kylin compat (glibc 2.31 / WebKitGTK 4.0)
+
+# ThinkRail is an Electrobun app, so it cannot use reusable-appimage.yml
+# (that workflow is Tauri/AppImage-only and requires WebKitGTK 4.1 >= 2.40).
+# This is the ThinkRail counterpart of gonavi-compat.yml.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "ThinkRail version (e.g. 0.3.2) or tag (v0.3.2); empty = latest release"
+        required: false
+        type: string
+  push:
+    branches: [thinkrail-kylin]
+  schedule:
+    - cron: "0 3 * * 1"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: thinkrail-kylin-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${{ inputs.version }}"
+          if [ -z "$TAG" ]; then
+            TAG="$(gh api repos/JetBrains/thinkrail/releases/latest --jq .tag_name)"
+          elif [[ "$TAG" != v* ]]; then
+            TAG="v$TAG"
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "resolved $TAG (version $VERSION)"
+
+  build:
+    needs: resolve
+    runs-on: ubuntu-22.04
+    container:
+      image: ubuntu:20.04
+    timeout-minutes: 120
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      TAG: ${{ needs.resolve.outputs.tag }}
+      VERSION: ${{ needs.resolve.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies (focal)
+        run: |
+          set -euo pipefail
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            ca-certificates curl git build-essential pkg-config patch file \
+            zstd bzip2 patchelf \
+            libwebkit2gtk-4.0-dev libgtk-3-dev libayatana-appindicator3-dev \
+            libx11-dev libxext-dev libxrender-dev libxcomposite-dev libxdamage-dev
+
+      - name: Preflight ABI (glibc 2.31, WebKitGTK 4.0 2.38.x)
+        run: |
+          set -euo pipefail
+          getconf GNU_LIBC_VERSION
+          test "$(getconf GNU_LIBC_VERSION | awk '{print $2}')" = "2.31"
+          WEBKIT="$(pkg-config --modversion webkit2gtk-4.0)"
+          echo "webkit2gtk-4.0: $WEBKIT"
+          case "$WEBKIT" in 2.38.*) ;; *) echo "expected WebKitGTK 4.0 2.38.x"; exit 1 ;; esac
+
+      - name: Download upstream app tree
+        run: |
+          set -euo pipefail
+          ASSET="stable-linux-x64-ThinkRail-${VERSION}.tar.zst"
+          URL="https://github.com/JetBrains/thinkrail/releases/download/${TAG}/${ASSET}"
+          curl -fL --retry 3 --retry-delay 5 -o thinkrail.tar.zst "$URL"
+          ls -lh thinkrail.tar.zst
+          zstd -dc thinkrail.tar.zst | tar -xf - -C .
+          test -x ThinkRail/bin/launcher
+
+      - name: Fetch Electrobun 2.0.5 source
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 --retry-delay 5 \
+            -o electrobun.tar.gz \
+            "https://github.com/blackboardsh/electrobun/archive/refs/tags/v2.0.5.tar.gz"
+          tar -xzf electrobun.tar.gz
+          mv electrobun-2.0.5 electrobun
+
+      - name: Fetch CEF 156 headers
+        run: |
+          set -euo pipefail
+          CEF_URL="https://cef-builds.spotifycdn.com/cef_binary_156.0.7%2Bg47dbc1d%2Bchromium-156.0.8078.17_linux64_minimal.tar.bz2"
+          curl -fL --retry 3 --retry-delay 5 -o cef.tar.bz2 "$CEF_URL"
+          ls -lh cef.tar.bz2
+          mkdir -p cef
+          tar -xjf cef.tar.bz2 --strip-components=1 -C cef
+          test -f cef/include/cef_app.h
+
+      - name: Fetch Dawn webgpu.h
+        run: |
+          set -euo pipefail
+          mkdir -p wgpu/dawn
+          curl -fL --retry 3 --retry-delay 5 \
+            -o wgpu/dawn/webgpu.h \
+            "https://raw.githubusercontent.com/webgpu-native/webgpu-headers/main/webgpu.h"
+          test -s wgpu/dawn/webgpu.h
+
+      - name: Apply WebKitGTK 4.0 compatibility patch
+        run: |
+          set -euo pipefail
+          cd electrobun
+          patch -p1 --dry-run < "$GITHUB_WORKSPACE/patches/electrobun-2.0.5-webkit40.patch"
+          patch -p1 < "$GITHUB_WORKSPACE/patches/electrobun-2.0.5-webkit40.patch"
+
+      - name: Build libNativeWrapper.so against WebKitGTK 4.0
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE/electrobun"
+          CXXFLAGS="$(pkg-config --cflags webkit2gtk-4.0 gtk+-3.0 ayatana-appindicator3-0.1)"
+          LIBS="$(pkg-config --libs webkit2gtk-4.0 gtk+-3.0 ayatana-appindicator3-0.1)"
+          FS=""
+          if [ -f "$(g++ -print-file-name=libstdc++fs.a)" ]; then FS="-lstdc++fs"; fi
+
+          g++ -std=c++2a -fPIC -O2 $CXXFLAGS \
+            -I"$GITHUB_WORKSPACE/cef" -I"$GITHUB_WORKSPACE/wgpu" \
+            -c -o nativeWrapper.o src/native/linux/nativeWrapper.cpp
+          g++ -std=c++2a -fPIC -O2 $CXXFLAGS \
+            -I"$GITHUB_WORKSPACE/cef" -I"$GITHUB_WORKSPACE/wgpu" \
+            -c -o wayland_screen_capture.o src/native/linux/wayland_screen_capture.cpp
+          g++ -std=c++2a -fPIC -O2 $CXXFLAGS \
+            -I"$GITHUB_WORKSPACE/cef" -I"$GITHUB_WORKSPACE/wgpu" \
+            -c -o wayland_pipewire_capture.o src/native/linux/wayland_pipewire_capture.cpp
+
+          g++ -shared -o libNativeWrapper.so \
+            nativeWrapper.o wayland_screen_capture.o wayland_pipewire_capture.o \
+            "$GITHUB_WORKSPACE/ThinkRail/bin/libasar.so" \
+            $LIBS -ldl -lpthread $FS
+
+      - name: Verify ABI and exports
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          OFFICIAL="ThinkRail/bin/libNativeWrapper.so"
+          REBUILT="electrobun/libNativeWrapper.so"
+
+          nm -D --defined-only "$OFFICIAL" | awk '$2=="T"{print $3}' | grep -v '^_Z' | sort > official.txt
+          nm -D --defined-only "$REBUILT" | awk '$2=="T"{print $3}' | grep -v '^_Z' | sort > rebuilt.txt
+          echo "official exports: $(wc -l < official.txt), rebuilt exports: $(wc -l < rebuilt.txt)"
+          MISSING="$(comm -23 official.txt rebuilt.txt)"
+          if [ -n "$MISSING" ]; then
+            echo "Missing exports:"
+            echo "$MISSING"
+            exit 1
+          fi
+          if nm -D "$REBUILT" | grep -q 'webkit_web_view_evaluate_javascript'; then
+            echo "4.1-only symbol is still referenced"
+            exit 1
+          fi
+
+          NEEDED="$(readelf -d "$REBUILT" | grep NEEDED)"
+          echo "$NEEDED"
+          echo "$NEEDED" | grep -q 'libwebkit2gtk-4.0.so.37'
+          echo "$NEEDED" | grep -q 'libsoup-2.4.so.1'
+          if echo "$NEEDED" | grep -qE 'webkit2gtk-4\.1|soup-3\.0'; then
+            echo "unexpected 4.1/soup3 dependency"
+            exit 1
+          fi
+
+          MAX_GLIBC="$(objdump -T "$REBUILT" | grep -oE 'GLIBC_[0-9.]+' | sort -V | tail -1)"
+          MAX_CXX="$(objdump -T "$REBUILT" | grep -oE 'GLIBCXX_[0-9.]+' | sort -V | tail -1)"
+          echo "max $MAX_GLIBC, $MAX_CXX"
+          test "$(printf '%s\n%s\n' GLIBC_2.31 "$MAX_GLIBC" | sort -V | tail -1)" = "GLIBC_2.31"
+          test "$(printf '%s\n%s\n' GLIBCXX_3.4.28 "$MAX_CXX" | sort -V | tail -1)" = "GLIBCXX_3.4.28"
+
+      - name: Install and smoke-test linkage
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          cp electrobun/libNativeWrapper.so ThinkRail/bin/libNativeWrapper.so
+          LD_LIBRARY_PATH="$PWD/ThinkRail/bin" ldd ThinkRail/bin/libNativeWrapper.so | tee ldd.txt
+          if grep -q 'not found' ldd.txt; then echo "unresolved shared library"; exit 1; fi
+
+      - name: Package
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          mkdir -p dist
+          cat > README-KYLIN.txt <<EOF
+          ThinkRail ${VERSION} for Kylin V10 / glibc 2.31 / libwebkit2gtk-4.0-37
+          ==========================================================================
+          This build replaces ThinkRail's libNativeWrapper.so with one compiled
+          against WebKitGTK 4.0 (2.38.x) and libsoup2.4 instead of 4.1/libsoup3.
+
+          Run:
+              ./ThinkRail/bin/launcher
+
+          Requirements:
+              glibc >= 2.31
+              libwebkit2gtk-4.0-37 (2.38.x), libgtk-3-0, libayatana-appindicator3-1
+
+          Verified ABI:
+              libNativeWrapper.so: GLIBC <= 2.31, GLIBCXX <= 3.4.28
+              NEEDED: libwebkit2gtk-4.0.so.37, libsoup-2.4.so.1
+
+          Notes:
+              - Auto-update is left enabled in the upstream app. If ThinkRail
+                updates itself it will replace this patched wrapper.
+              - Wayland screen capture is disabled (no libpipewire build).
+              - This is an unofficial compatibility build. Upstream support
+                does not cover patched binaries.
+          EOF
+          tar -czf "dist/ThinkRail-${VERSION}-linux-amd64-kylin.tar.gz" ThinkRail README-KYLIN.txt
+          sha256sum "dist/ThinkRail-${VERSION}-linux-amd64-kylin.tar.gz" > dist/SHA256SUMS.txt
+          ls -lh dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thinkrail-kylin-${{ env.VERSION }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    needs: [resolve, build]
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: thinkrail-kylin-${{ needs.resolve.outputs.version }}
+          path: dist
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ needs.resolve.outputs.tag }}
+          VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          set -euo pipefail
+          REL="thinkrail-${TAG}"
+          if ! gh release view "$REL" >/dev/null 2>&1; then
+            gh release create "$REL" \
+              --title "ThinkRail ${VERSION} (Kylin V10 / glibc 2.31)" \
+              --notes "Unofficial Kylin-compatible build of ThinkRail ${VERSION}. Rebuilt libNativeWrapper.so against WebKitGTK 4.0 / libsoup2.4; ABI-gated to GLIBC <= 2.31." \
+              --prerelease
+          fi
+          gh release upload "$REL" dist/* --clobber
