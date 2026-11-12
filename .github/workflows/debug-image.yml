@@ -1,0 +1,28 @@
+name: Debug compat image build
+
+on:
+  push:
+    paths:
+      - ".github/workflows/debug-image.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build with visible log
+        run: |
+          set +e
+          docker build --progress=plain -f docker/tauri2-webkit41.Dockerfile . > /tmp/build.log 2>&1
+          rc=$?
+          {
+            echo "### docker build rc=$rc"
+            echo '```'
+            tail -n 150 /tmp/build.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 0
