@@ -59,7 +59,7 @@
 +#else
 +            SoupDate* expires = soup_cookie_get_expires(cookie);
 +            if (expires) {
-+                json << ",\"expirationDate\":" << expires->time;
++                json << ",\"expirationDate\":" << soup_date_to_time_t(expires);
 +            }
 +#endif
  
