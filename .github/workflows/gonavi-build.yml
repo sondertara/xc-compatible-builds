@@ -232,37 +232,62 @@ jobs:
     needs: [resolve, build]
     if: needs.resolve.outputs.skipped != 'true' && needs.build.result == 'success'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
+      - uses: actions/checkout@v5
+
       - name: Download all artifacts
         uses: actions/download-artifact@v7
         with:
           pattern: gonavi-linux-*
+          path: dist
           merge-multiple: true
+
+      - name: Fetch upstream release notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPSTREAM_TAG: ${{ needs.resolve.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh api "repos/Syngnat/GoNavi/releases/tags/${UPSTREAM_TAG}" --jq .body > upstream-notes.md \
+            || echo '_上游未发布 Release Notes。_' > upstream-notes.md
+
+      - name: Render release notes
+        run: |
+          set -euo pipefail
+          python3 scripts/render-release-notes.py \
+            --template release/notes-template.md \
+            --out release-notes.md \
+            --assets-dir dist \
+            --upstream-body upstream-notes.md \
+            --app-id gonavi \
+            --display-name GoNavi \
+            --version "${{ needs.resolve.outputs.version }}" \
+            --upstream-url "https://github.com/Syngnat/GoNavi/releases/tag/${{ needs.resolve.outputs.tag }}" \
+            --upstream-tag "${{ needs.resolve.outputs.tag }}" \
+            --runtime "libwebkit2gtk-4.0-37, GTK3, libsoup2.4" \
+            --install-file release/apps/gonavi/install.md \
+            --diff-file release/apps/gonavi/diff.md \
+            --check-file release/apps/gonavi/check.md \
+            --run-id "$GITHUB_RUN_ID" \
+            --commit "$GITHUB_SHA"
 
       - name: Create / Update Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ needs.resolve.outputs.release_tag }}
-          UPSTREAM_TAG: ${{ needs.resolve.outputs.tag }}
+          VERSION: ${{ needs.resolve.outputs.version }}
         run: |
           set -euo pipefail
+          TITLE="GoNavi ${VERSION} (Kylin V10 / glibc 2.31)"
           if gh release view "$RELEASE_TAG" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
-            echo "Release $RELEASE_TAG exists, uploading assets..."
+            gh release edit "$RELEASE_TAG" --repo "${GITHUB_REPOSITORY}" \
+              --title "$TITLE" --notes-file release-notes.md --latest=false
           else
-            NOTES=$(gh api "repos/Syngnat/GoNavi/releases/tags/$UPSTREAM_TAG" --jq '.body' 2>/dev/null || echo "")
-            PREFIX="> **Compat build** — GoNavi 基于 Ubuntu 20.04 (glibc 2.31) 重新构建，兼容麒麟 V10。
-          > 上游: https://github.com/Syngnat/GoNavi/releases/tag/$UPSTREAM_TAG
-          > 运行时需 webkit2gtk-4.0 (focal/bullseye 默认提供)"
-            NOTES="${PREFIX}
-
-          ---
-
-          ${NOTES:- compat build}"
-            gh release create "$RELEASE_TAG" \
-              --repo "${GITHUB_REPOSITORY}" \
-              --title "$RELEASE_TAG (glibc 2.31 compat)" \
-              --notes "$NOTES" \
-              --latest=false
+            gh release create "$RELEASE_TAG" --repo "${GITHUB_REPOSITORY}" \
+              --title "$TITLE" --notes-file release-notes.md --latest=false
           fi
-          gh release upload "$RELEASE_TAG" --repo "${GITHUB_REPOSITORY}" --clobber GoNavi-*.tar.gz GoNavi-*.tar.gz.sha256
+          gh release upload "$RELEASE_TAG" --repo "${GITHUB_REPOSITORY}" --clobber \
+            dist/GoNavi-*.tar.gz dist/GoNavi-*.tar.gz.sha256
           gh release view "$RELEASE_TAG" --repo "${GITHUB_REPOSITORY}" --json assets --jq '.assets[].name'

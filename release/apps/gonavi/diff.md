@@ -1,0 +1,3 @@
+- 使用 Ubuntu 20.04（glibc 2.31）与系统 `libwebkit2gtk-4.0-dev` 重建 Wails 二进制。
+- 不修改上游业务代码；Go/Wails 版本由 `go.mod` 决定。
+- 产物按上游命名规则打包，附 `.sha256`。

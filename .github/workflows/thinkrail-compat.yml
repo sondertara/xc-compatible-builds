@@ -457,11 +457,42 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v5
+
       - uses: actions/download-artifact@v7
         with:
           pattern: thinkrail-kylin-${{ needs.resolve.outputs.version }}-*
           path: dist
           merge-multiple: true
+
+      - name: Fetch upstream release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPSTREAM_TAG: ${{ needs.resolve.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh api "repos/JetBrains/thinkrail/releases/tags/${UPSTREAM_TAG}" --jq .body > upstream-notes.md \
+            || echo '_上游未发布 Release Notes。_' > upstream-notes.md
+
+      - name: Render release notes
+        run: |
+          set -euo pipefail
+          python3 scripts/render-release-notes.py \
+            --template release/notes-template.md \
+            --out release-notes.md \
+            --assets-dir dist \
+            --upstream-body upstream-notes.md \
+            --app-id thinkrail \
+            --display-name ThinkRail \
+            --version "${{ needs.resolve.outputs.version }}" \
+            --upstream-url "https://github.com/JetBrains/thinkrail/releases/tag/${{ needs.resolve.outputs.tag }}" \
+            --upstream-tag "${{ needs.resolve.outputs.tag }}" \
+            --runtime "libwebkit2gtk-4.0-37 (2.38.x), GTK3, libsoup2.4, libayatana-appindicator3" \
+            --install-file release/apps/thinkrail/install.md \
+            --diff-file release/apps/thinkrail/diff.md \
+            --check-file release/apps/thinkrail/check.md \
+            --run-id "$GITHUB_RUN_ID" \
+            --commit "$GITHUB_SHA"
 
       - name: Publish release
         env:
@@ -472,10 +503,10 @@ jobs:
         run: |
           set -euo pipefail
           REL="thinkrail-${TAG}"
-          if ! gh release view "$REL" >/dev/null 2>&1; then
-            gh release create "$REL" \
-              --title "ThinkRail ${VERSION} (Kylin V10 / glibc 2.31)" \
-              --notes "Unofficial Kylin-compatible build of ThinkRail ${VERSION}. Rebuilt libNativeWrapper.so against WebKitGTK 4.0 / libsoup2.4; ABI-gated to GLIBC <= 2.31." \
-              --prerelease
+          TITLE="ThinkRail ${VERSION} (Kylin V10 / glibc 2.31)"
+          if gh release view "$REL" >/dev/null 2>&1; then
+            gh release edit "$REL" --title "$TITLE" --notes-file release-notes.md --latest=false
+          else
+            gh release create "$REL" --title "$TITLE" --notes-file release-notes.md --latest=false
           fi
           gh release upload "$REL" dist/* --clobber

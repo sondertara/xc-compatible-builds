@@ -1,0 +1,6 @@
+- `libNativeWrapper.so` 针对 **WebKitGTK 4.0（2.38.x）+ libsoup2.4** 重新编译，替换官方 4.1 版本。
+- 前端 bundle 已处理 WebKitGTK 4.0 不支持的两类语法：正则 lookbehind、class static block。
+- 捆绑 `libayatana-appindicator3`、`libayatana-indicator3`、`libdbusmenu-glib`、`libdbusmenu-gtk3`，避免麒麟缺少托盘依赖。
+- ABI 闸门：173 个官方导出符号齐全、无 4.1-only 符号、GLIBC ≤ 2.31、GLIBCXX ≤ 3.4.28。
+- 未运行官方 installer 二进制（它要求 glibc 2.34/2.36），安装器复刻其目录与卸载行为。
+- Wayland 屏幕捕获未启用。

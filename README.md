@@ -91,6 +91,18 @@ glibc 2.31 的公共 Debian/Ubuntu 源里没有这个包，因此定制镜像 =
 > 旧 README 写的 2.40.6 已过时；以 `docker/tauri2-webkit41.Dockerfile` 的
 > 2.44.4 为准。首次构建约 2~3 小时/架构，仅需一次，之后复用 ghcr 镜像。
 
+## Release 文案模板
+
+所有应用共用一套 Release 结构和上游更新记录：
+
+- `release/notes-template.md`：兼容说明、上游 Release Notes、安装、差异、产物、校验；
+- `release/apps/<id>/{install,diff,check}.md`：应用自己的说明，支持 `{{VERSION}}`；
+- `scripts/render-release-notes.py`：渲染模板并附加 provenance 注释。
+
+Tauri、Wails、Electrobun 的 release job 都会先 `gh api` 拉取上游 Release 的
+`body`，再渲染同一模板，标题统一为 `<应用> <版本> (Kylin V10 / glibc 2.31)`。
+新增应用只需补 `release/apps/<id>/` 三个 Markdown 文件。
+
 ## 质量闸门
 
 - 预检：容器 glibc ≤ 2.31（超出直接 fail）
