@@ -1,0 +1,54 @@
+name: Release index
+
+# GitHub Releases are a single chronological stream.  This workflow keeps a
+# per-application index (README table + release/index.json) up to date.
+# It is called by each app's release job (the GITHUB_TOKEN-created release
+# event does not trigger workflows), and can also be run manually/on schedule.
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *"
+  release:
+    types: [published, edited, deleted]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-index
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install PyYAML
+        run: python3 -m pip install --quiet pyyaml
+
+      - name: Regenerate index
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/build-release-index.py --repo "$GITHUB_REPOSITORY"
+
+      - name: Commit changed index
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- README.md release/index.json; then
+            echo "release index already up to date"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md release/index.json
+          git commit -m "docs: refresh release index [skip ci]"
+          git push

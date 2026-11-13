@@ -510,3 +510,10 @@ jobs:
             gh release create "$REL" --title "$TITLE" --notes-file release-notes.md --latest=false
           fi
           gh release upload "$REL" dist/* --clobber
+
+  index:
+    needs: [release]
+    if: needs.release.result == 'success'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release-index.yml

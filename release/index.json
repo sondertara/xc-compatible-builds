@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "repository": "sondertara/xc-compatible-builds",
+  "latest_release_at": "2026-11-13T07:08:28Z",
+  "apps": [
+    {
+      "id": "dbx",
+      "display_name": "DBX",
+      "versions": []
+    },
+    {
+      "id": "gonavi",
+      "display_name": "GoNavi",
+      "versions": [
+        {
+          "version": "1.2.2",
+          "tag": "gonavi-v1.2.2",
+          "published_at": "2026-11-12T10:42:29Z",
+          "release_url": "https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v1.2.2"
+        },
+        {
+          "version": "0.9.7",
+          "tag": "gonavi-v0.9.7",
+          "published_at": "2026-09-07T07:46:49Z",
+          "release_url": "https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v0.9.7"
+        },
+        {
+          "version": "0.9.4",
+          "tag": "gonavi-v0.9.4",
+          "published_at": "2026-08-25T11:06:26Z",
+          "release_url": "https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v0.9.4"
+        }
+      ],
+      "latest": {
+        "version": "1.2.2",
+        "tag": "gonavi-v1.2.2",
+        "published_at": "2026-11-12T10:42:29Z",
+        "release_url": "https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v1.2.2",
+        "assets": [
+          "GoNavi-1.2.2-Linux-Amd64.tar.gz",
+          "GoNavi-1.2.2-Linux-Amd64.tar.gz.sha256",
+          "GoNavi-1.2.2-Linux-Arm64.tar.gz",
+          "GoNavi-1.2.2-Linux-Arm64.tar.gz.sha256"
+        ]
+      }
+    },
+    {
+      "id": "thinkrail",
+      "display_name": "ThinkRail",
+      "versions": [
+        {
+          "version": "0.4.0",
+          "tag": "thinkrail-v0.4.0",
+          "published_at": "2026-11-13T07:08:28Z",
+          "release_url": "https://github.com/sondertara/xc-compatible-builds/releases/tag/thinkrail-v0.4.0"
+        }
+      ],
+      "latest": {
+        "version": "0.4.0",
+        "tag": "thinkrail-v0.4.0",
+        "published_at": "2026-11-13T07:08:28Z",
+        "release_url": "https://github.com/sondertara/xc-compatible-builds/releases/tag/thinkrail-v0.4.0",
+        "assets": [
+          "SHA256SUMS-aarch64.txt",
+          "SHA256SUMS-amd64.txt",
+          "ThinkRail-0.4.0-linux-aarch64-installer.tar.gz",
+          "ThinkRail-0.4.0-linux-aarch64-kylin.tar.gz",
+          "ThinkRail-0.4.0-linux-amd64-installer.tar.gz",
+          "ThinkRail-0.4.0-linux-amd64-kylin.tar.gz"
+        ]
+      }
+    }
+  ]
+}

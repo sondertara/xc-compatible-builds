@@ -6,6 +6,50 @@
 > 这里**不只支持 Rust/Tauri**。Tauri 只是其中一条路径；Go/Wails、Electrobun
 > 等非 Rust 桌面应用同样可以接入，见下面的“三条构建路径”。
 
+## 兼容版本索引
+
+<!-- releases:start -->
+> 本表由 `.github/workflows/release-index.yml` 自动生成，请勿手工编辑。
+
+| 应用 | 最新兼容版本 | 发布时间 | 架构 | 下载 | 历史 |
+|------|--------------|----------|------|------|------|
+| DBX | 未发布 | — | — | — | — |
+| GoNavi | `1.2.2` | 2026-11-12 | x86_64 / aarch64 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v1.2.2) | [全部](https://github.com/sondertara/xc-compatible-builds/releases?q=gonavi-) |
+| ThinkRail | `0.4.0` | 2026-11-13 | x86_64 / aarch64 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/thinkrail-v0.4.0) | [全部](https://github.com/sondertara/xc-compatible-builds/releases?q=thinkrail-) |
+
+<details>
+<summary>全部兼容版本（按应用分组）</summary>
+
+| 应用 | 版本 | 发布时间 | 下载 |
+|------|------|----------|------|
+| GoNavi | `1.2.2` | 2026-11-12 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v1.2.2) |
+| GoNavi | `0.9.7` | 2026-09-07 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v0.9.7) |
+| GoNavi | `0.9.4` | 2026-08-25 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v0.9.4) |
+| ThinkRail | `0.4.0` | 2026-11-13 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/thinkrail-v0.4.0) |
+
+</details>
+
+<!-- releases:end -->
+
+### 为什么不能只看 GitHub Releases
+
+GitHub 的 Releases 页面是**按时间排的一条线**，没有“应用分组”，也没有“每个应用各自的最新版”：
+
+- 发布 ThinkRail 后，列表顶部是 ThinkRail；发布 GoNavi 后，它又跑到顶部；
+- 全局只有一个 “Latest” 徽章，无法同时标出 ThinkRail / GoNavi / DBX 各自的最新版；
+- 同一应用的历史版本散落在时间线里，翻起来很费劲。
+
+解决办法不是改 GitHub 的排序，而是约定并生成索引：
+
+1. **Tag 命名**固定为 `<app-id>-v<semver>`，例如 `thinkrail-v0.4.0`、`gonavi-v1.2.2`；
+2. 上面的表按应用分组，取**语义化版本最高**的稳定版，不使用 GitHub 的全局 Latest；
+3. `<details>` 里列出每个应用的全部兼容版本；
+4. `release/index.json` 提供同样的机器可读数据，方便脚本/页面消费；
+5. 索引由 `.github/workflows/release-index.yml` 在每次 release 后自动刷新，也可手动或每天定时刷新。
+
+如果以后要更强的筛选/搜索，可以在 `release/index.json` 之上加一个 GitHub Pages 仪表盘；README 索引仍然是最直接的入口。
+
+
 ## 三条构建路径
 
 | 路径 | 适用应用 | 构建方式 | 参考 |

@@ -291,3 +291,10 @@ jobs:
           gh release upload "$RELEASE_TAG" --repo "${GITHUB_REPOSITORY}" --clobber \
             dist/GoNavi-*.tar.gz dist/GoNavi-*.tar.gz.sha256
           gh release view "$RELEASE_TAG" --repo "${GITHUB_REPOSITORY}" --json assets --jq '.assets[].name'
+
+  index:
+    needs: [release]
+    if: needs.release.result == 'success'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release-index.yml
