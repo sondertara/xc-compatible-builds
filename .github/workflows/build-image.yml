@@ -4,17 +4,13 @@ name: Build Compat Image (glibc 2.31 + webkit2gtk-4.1)
 # 镜像构成：debian:bullseye (glibc 2.31) + 源码编译 glib 2.72 / libsoup3 / WebKitGTK 2.44.4
 #
 # 触发时机：
-# - 手动（首次部署必跑一次，约 2~3 小时/架构）
-# - Dockerfile 变更推送到 main 时自动重建
+# - 仅手动（首次部署必跑一次，约 2~3 小时/架构）
+# - 该镜像只服务 Tauri/dbx 路径；ThinkRail 不编译 WebKitGTK。
+#   自动 push 触发会在无关提交上浪费数小时，故关掉。
 # 后续 App Build 工作流直接引用 ghcr 镜像，不再重新编译 webkit
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "docker/tauri2-webkit41.Dockerfile"
-      - ".github/workflows/build-image.yml"
 
 permissions:
   contents: read
