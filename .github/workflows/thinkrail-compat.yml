@@ -327,6 +327,17 @@ jobs:
           LD_LIBRARY_PATH="$PWD/ThinkRail/bin" ldd ThinkRail/bin/libNativeWrapper.so | tee ldd.txt
           if grep -q 'not found' ldd.txt; then echo "unresolved shared library"; exit 1; fi
 
+      - name: Fetch official desktop installer
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          URL="https://github.com/JetBrains/thinkrail/releases/download/${TAG}/thinkrail-desktop-linux-${UPSTREAM_ARCH}.tar.gz"
+          echo "Downloading $URL"
+          curl -fL --retry 3 --retry-delay 5 "$URL" -o official-desktop.tar.gz
+          mkdir -p official-installer
+          tar -xzf official-desktop.tar.gz -C official-installer installer
+          test -x official-installer/installer
+
       - name: Package
         run: |
           set -euo pipefail
@@ -338,7 +349,18 @@ jobs:
           This build replaces ThinkRail's libNativeWrapper.so with one compiled
           against WebKitGTK 4.0 (2.38.x) and libsoup2.4 instead of 4.1/libsoup3.
 
-          Run:
+          Install (official installer UX, single command):
+              tar -xzf ThinkRail-${VERSION}-linux-${ARCH}-installer.tar.gz
+              ./installer
+
+          The installer runs the official ThinkRail installer, then swaps in the
+          WebKitGTK 4.0 wrapper. It writes:
+              ~/.local/share/ai.thinkrail.app/stable/app
+              ~/.local/share/applications/ThinkRail.desktop
+              ~/.local/share/ai.thinkrail.app/stable/uninstall
+
+          Portable alternative (no desktop integration):
+              tar -xzf ThinkRail-${VERSION}-linux-${ARCH}-kylin.tar.gz
               ./ThinkRail/bin/launcher
 
           Requirements:
@@ -357,8 +379,34 @@ jobs:
                 does not cover patched binaries.
           EOF
           tar -czf "dist/ThinkRail-${VERSION}-linux-${ARCH}-kylin.tar.gz" ThinkRail README-KYLIN.txt
-          sha256sum "dist/ThinkRail-${VERSION}-linux-${ARCH}-kylin.tar.gz" > "dist/SHA256SUMS-${ARCH}.txt"
-          ls -lh dist
+
+          # Build the official-installer wrapper: the shell stub runs the real
+          # Electrobun installer from its payload, then overlays our wrapper.
+          mkdir -p payload installer-stage
+          cp official-installer/installer payload/installer
+          cp ThinkRail/bin/libNativeWrapper.so payload/libNativeWrapper.so
+          cp README-KYLIN.txt payload/README-KYLIN.txt
+          tar -czf payload.tar.gz -C payload installer libNativeWrapper.so README-KYLIN.txt
+          cp "$GITHUB_WORKSPACE/apps/thinkrail/installer.sh" installer-stage/installer
+          cat payload.tar.gz >> installer-stage/installer
+          chmod +x installer-stage/installer
+          cp README-KYLIN.txt installer-stage/README-KYLIN.txt
+          tar -czf "dist/ThinkRail-${VERSION}-linux-${ARCH}-installer.tar.gz" \
+            -C installer-stage installer README-KYLIN.txt
+
+          # Smoke the installer in a throwaway HOME (no display => no launch).
+          INSTALL_HOME="$RUNNER_TEMP/thinkrail-install"
+          rm -rf "$INSTALL_HOME"; mkdir -p "$INSTALL_HOME"
+          HOME="$INSTALL_HOME" ./installer-stage/installer --quiet --no-launch
+          INSTALLED="$INSTALL_HOME/.local/share/ai.thinkrail.app/stable/app"
+          test -x "$INSTALLED/bin/launcher"
+          test -f "$INSTALL_HOME/.local/share/applications/ThinkRail.desktop"
+          cmp "$INSTALLED/bin/libNativeWrapper.so" ThinkRail/bin/libNativeWrapper.so
+          HOME="$INSTALL_HOME" "$INSTALL_HOME/.local/share/ai.thinkrail.app/stable/uninstall" --quiet || true
+          test ! -e "$INSTALL_HOME/.local/share/ai.thinkrail.app"
+
+          sha256sum dist/*.tar.gz > "dist/SHA256SUMS-${ARCH}.txt"
+          ls -lh dist installer-stage payload
 
       - uses: actions/upload-artifact@v6
         with:
