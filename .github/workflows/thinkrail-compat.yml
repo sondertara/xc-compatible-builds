@@ -342,6 +342,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "$GITHUB_WORKSPACE"
+          exec > >(tee -a package.log) 2>&1
           mkdir -p dist
           cat > README-KYLIN.txt <<EOF
           ThinkRail ${VERSION} for Kylin V10 / glibc 2.31 / libwebkit2gtk-4.0-37
@@ -407,6 +408,23 @@ jobs:
 
           sha256sum dist/*.tar.gz > "dist/SHA256SUMS-${ARCH}.txt"
           ls -lh dist installer-stage payload
+
+      - name: Publish package log
+        if: failure()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const p = (process.env.GITHUB_WORKSPACE || '') + '/package.log';
+            if (!fs.existsSync(p)) { core.error('package.log missing'); return; }
+            const log = fs.readFileSync(p, 'utf8').slice(-20000);
+            core.error(log.slice(-3000));
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: 'package failure:\n```\n' + log + '\n```'
+            });
 
       - uses: actions/upload-artifact@v6
         with:
