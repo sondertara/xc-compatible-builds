@@ -12,6 +12,11 @@ on:
         description: "ThinkRail version (e.g. 0.3.2) or tag (v0.3.2); empty = latest release"
         required: false
         type: string
+  push:
+    branches: [thinkrail-kylin]
+    paths:
+      - ".github/workflows/thinkrail-compat.yml"
+      - "apps/thinkrail/**"
 
 permissions:
   contents: write
@@ -48,15 +53,28 @@ jobs:
           echo "resolved $TAG (version $VERSION)"
 
   build:
+    name: Build (${{ matrix.arch }})
     needs: resolve
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.runner }}
     container:
       image: ubuntu:20.04
     timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-22.04
+            upstream_arch: x64
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+            upstream_arch: arm64
     env:
       DEBIAN_FRONTEND: noninteractive
       TAG: ${{ needs.resolve.outputs.tag }}
       VERSION: ${{ needs.resolve.outputs.version }}
+      ARCH: ${{ matrix.arch }}
+      UPSTREAM_ARCH: ${{ matrix.upstream_arch }}
     steps:
       - uses: actions/checkout@v4
 
@@ -125,7 +143,7 @@ jobs:
         run: |
           set -euo pipefail
           exec > >(tee download.log) 2>&1
-          ASSET="stable-linux-x64-ThinkRail-${VERSION}.tar.zst"
+          ASSET="stable-linux-${UPSTREAM_ARCH}-ThinkRail-${VERSION}.tar.zst"
           URL="https://github.com/JetBrains/thinkrail/releases/download/${TAG}/${ASSET}"
           echo "GET $URL"
           curl -fL --retry 3 --retry-delay 5 -o thinkrail.tar.zst "$URL"
@@ -338,13 +356,13 @@ jobs:
               - This is an unofficial compatibility build. Upstream support
                 does not cover patched binaries.
           EOF
-          tar -czf "dist/ThinkRail-${VERSION}-linux-amd64-kylin.tar.gz" ThinkRail README-KYLIN.txt
-          sha256sum "dist/ThinkRail-${VERSION}-linux-amd64-kylin.tar.gz" > dist/SHA256SUMS.txt
+          tar -czf "dist/ThinkRail-${VERSION}-linux-${ARCH}-kylin.tar.gz" ThinkRail README-KYLIN.txt
+          sha256sum "dist/ThinkRail-${VERSION}-linux-${ARCH}-kylin.tar.gz" > "dist/SHA256SUMS-${ARCH}.txt"
           ls -lh dist
 
       - uses: actions/upload-artifact@v4
         with:
-          name: thinkrail-kylin-${{ env.VERSION }}
+          name: thinkrail-kylin-${{ env.VERSION }}-${{ matrix.arch }}
           path: dist/*
           if-no-files-found: error
 
@@ -357,8 +375,9 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: thinkrail-kylin-${{ needs.resolve.outputs.version }}
+          pattern: thinkrail-kylin-${{ needs.resolve.outputs.version }}-*
           path: dist
+          merge-multiple: true
 
       - name: Publish release
         env:
