@@ -12,12 +12,6 @@ on:
         description: "ThinkRail version (e.g. 0.3.2) or tag (v0.3.2); empty = latest release"
         required: false
         type: string
-  push:
-    branches: [thinkrail-kylin]
-    paths:
-      - ".github/workflows/thinkrail-compat.yml"
-      - "apps/thinkrail/**"
-
 permissions:
   contents: write
 
@@ -349,7 +343,10 @@ jobs:
             libayatana-indicator3.so.7 \
             libdbusmenu-glib.so.4 \
             libdbusmenu-gtk3.so.4; do
-            cp -a "/usr/lib/$MULTIARCH/$lib"* ThinkRail/bin/
+            # Dereference the soname symlink: a single regular file named
+            # after the soname loads identically and survives zip extraction.
+            cp -L "/usr/lib/$MULTIARCH/$lib" ThinkRail/bin/
+            test -f "ThinkRail/bin/$lib"
           done
           ls -l ThinkRail/bin/libayatana* ThinkRail/bin/libdbusmenu*
 
