@@ -333,6 +333,31 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           exec > >(tee -a package.log) 2>&1
           mkdir -p dist
+
+          # Kylin V10 does not ship libayatana-appindicator3-1. Bundle the
+          # focal runtime libs next to libasar.so; the launcher already puts
+          # bin/ on LD_LIBRARY_PATH, so the wrapper resolves them there.
+          MULTIARCH=$(g++-10 -print-multiarch)
+          for lib in \
+            libayatana-appindicator3.so.1 \
+            libayatana-indicator3.so.7 \
+            libdbusmenu-glib.so.4 \
+            libdbusmenu-gtk3.so.4; do
+            cp -a "/usr/lib/$MULTIARCH/$lib"* ThinkRail/bin/
+          done
+          ls -l ThinkRail/bin/libayatana* ThinkRail/bin/libdbusmenu*
+
+          {
+            echo "Bundled runtime libraries (LGPL-2.1-or-later):"
+            echo "  libayatana-appindicator3, libayatana-indicator3, libdbusmenu"
+            echo
+            for pkg in libayatana-appindicator3-1 libayatana-indicator3-7 \
+                       libdbusmenu-glib4 libdbusmenu-gtk3-4; do
+              cat "/usr/share/doc/$pkg/copyright" 2>/dev/null || true
+            done
+          } > ThinkRail/THIRD_PARTY_LICENSES.txt
+          cp ThinkRail/THIRD_PARTY_LICENSES.txt THIRD_PARTY_LICENSES.txt
+
           cat > README-KYLIN.txt <<EOF
           ThinkRail ${VERSION} for Kylin V10 / glibc 2.31 / libwebkit2gtk-4.0-37
           ==========================================================================
@@ -358,7 +383,10 @@ jobs:
 
           Requirements:
               glibc >= 2.31
-              libwebkit2gtk-4.0-37 (2.38.x), libgtk-3-0, libayatana-appindicator3-1
+              libwebkit2gtk-4.0-37 (2.38.x), libgtk-3-0
+          Bundled:
+              Ayatana AppIndicator + dbusmenu runtime libs in ThinkRail/bin,
+              so libayatana-appindicator3-1 is NOT required on the target.
 
           Verified ABI:
               libNativeWrapper.so: GLIBC <= 2.31, GLIBCXX <= 3.4.28
@@ -371,7 +399,8 @@ jobs:
               - This is an unofficial compatibility build. Upstream support
                 does not cover patched binaries.
           EOF
-          tar -czf "dist/ThinkRail-${VERSION}-linux-${ARCH}-kylin.tar.gz" ThinkRail README-KYLIN.txt
+          tar -czf "dist/ThinkRail-${VERSION}-linux-${ARCH}-kylin.tar.gz" \
+            ThinkRail README-KYLIN.txt THIRD_PARTY_LICENSES.txt
 
           mkdir -p installer-stage
           cp "$GITHUB_WORKSPACE/apps/thinkrail/installer.sh" installer-stage/installer
