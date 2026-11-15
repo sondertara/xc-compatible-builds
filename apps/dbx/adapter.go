@@ -200,9 +200,13 @@ func (a *Adapter) Authenticate(ctx context.Context, client *http.Client, baseURL
 	}, nil
 }
 
-// ValidateUISmoke implements sidecar.UISmokeValidator, asserting that cookie pre-injection
-// entered the mounted DBX workspace without landing on a password login gate.
+// ValidateUISmoke implements sidecar.UISmokeValidator, asserting that the WebView loaded
+// via the permanent `.localhost` virtual origin and entered the authenticated DBX workspace.
 func (a *Adapter) ValidateUISmoke(report sidecar.UISmokeReport) error {
+	expectedPrefix := "http://" + sidecar.VirtualHost(a.Meta().ID) + "/"
+	if strings.TrimSpace(report.URL) != "" && !strings.HasPrefix(report.URL, expectedPrefix) {
+		return fmt.Errorf("DBX UI loaded unexpected origin %q (want prefix %q)", report.URL, expectedPrefix)
+	}
 	if report.PasswordInputCount > 0 || strings.Contains(strings.ToLower(report.Pathname), "login") {
 		return fmt.Errorf(
 			"DBX UI landed on password/login view (pathname=%q, passwordInputs=%d); session cookie injection likely failed",

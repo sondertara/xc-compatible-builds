@@ -197,11 +197,21 @@ func TestValidateUISmoke(t *testing.T) {
 	adapter := NewAdapter(Options{})
 
 	if err := adapter.ValidateUISmoke(sidecar.UISmokeReport{
+		URL:                "http://com-dbx-desktop.localhost/",
 		Pathname:           "/",
 		ElementCount:       85,
 		PasswordInputCount: 0,
 	}); err != nil {
 		t.Fatalf("expected valid workspace UI to pass, got %v", err)
+	}
+
+	if err := adapter.ValidateUISmoke(sidecar.UISmokeReport{
+		URL:                "http://127.0.0.1:45678/",
+		Pathname:           "/",
+		ElementCount:       85,
+		PasswordInputCount: 0,
+	}); err == nil {
+		t.Fatal("expected raw loopback port origin to fail virtual-origin UI smoke check")
 	}
 
 	if err := adapter.ValidateUISmoke(sidecar.UISmokeReport{

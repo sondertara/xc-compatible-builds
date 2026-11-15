@@ -35,6 +35,26 @@ func Run(ctx context.Context, adapter Adapter, opts Options) error {
 		return fmt.Errorf("adapter must not be nil")
 	}
 
+	uiSmokeDir := strings.TrimSpace(opts.UISmokeDir)
+	uiSmoke := uiSmokeDir != ""
+
+	meta := adapter.Meta()
+	appName := strings.TrimSpace(meta.ID)
+	if appName == "" {
+		appName = strings.TrimSpace(meta.Name)
+	}
+	if appName != "" {
+		mygo.App.SetName(appName)
+	}
+
+	// Enforce single-instance desktop lock in normal interactive runs before spawning the backend,
+	// so clicking the desktop launcher again focuses the existing window instead of racing on SQLite.
+	if !opts.SmokeTest && !uiSmoke {
+		if !mygo.App.RequestSingleInstanceLock() {
+			return nil
+		}
+	}
+
 	if !opts.SmokeTest && runtime.GOOS == "linux" && !opts.EnableGPU && os.Getenv("WEBKIT_ENABLE_GPU") != "1" {
 		if os.Getenv("WEBKIT_DISABLE_COMPOSITING_MODE") == "" {
 			_ = os.Setenv("WEBKIT_DISABLE_COMPOSITING_MODE", "1")
@@ -67,7 +87,8 @@ func Run(ctx context.Context, adapter Adapter, opts Options) error {
 	}
 	defer func() { _ = proc.Stop(5 * time.Second) }()
 
-	baseURL := fmt.Sprintf("http://127.0.0.1:%d", port)
+	backendAddr := fmt.Sprintf("127.0.0.1:%d", port)
+	baseURL := "http://" + backendAddr
 	readyPath := normalizePath(spec.ReadyPath)
 	readyTimeout := spec.ReadyTimeout
 	if readyTimeout <= 0 {
@@ -101,8 +122,14 @@ func Run(ctx context.Context, adapter Adapter, opts Options) error {
 	// Let MyGO manage SIGINT/SIGTERM once the event loop owns shutdown.
 	stopSig()
 
-	uiSmokeDir := strings.TrimSpace(opts.UISmokeDir)
-	uiSmoke := uiSmokeDir != ""
+	gateway, err := StartLocalGateway(VirtualHost(appName), backendAddr)
+	if err != nil {
+		if uiSmoke {
+			_ = writeUISmokeArtifacts(uiSmokeDir, nil, nil, err)
+		}
+		return fmt.Errorf("start local gateway: %w", err)
+	}
+	defer func() { _ = gateway.Close() }()
 
 	var collector *uiSmokeCollector
 	var uiSmokeMu sync.Mutex
@@ -126,14 +153,22 @@ func Run(ctx context.Context, adapter Adapter, opts Options) error {
 		defer collector.Close()
 	}
 
-	meta := adapter.Meta()
-	if meta.ID != "" {
-		mygo.App.SetName(meta.ID)
-	} else if meta.Name != "" {
-		mygo.App.SetName(meta.Name)
+	var winMu sync.Mutex
+	var mainWin *mygo.Window
+	if !uiSmoke {
+		mygo.App.OnSecondInstance(func(_ []string, _ string) {
+			winMu.Lock()
+			w := mainWin
+			winMu.Unlock()
+			if w != nil {
+				w.Show()
+				w.Focus()
+			}
+		})
 	}
 
 	mygo.App.OnQuit(func() {
+		_ = gateway.Close()
 		_ = proc.Stop(5 * time.Second)
 	})
 
@@ -179,15 +214,33 @@ func Run(ctx context.Context, adapter Adapter, opts Options) error {
 	}()
 
 	mygo.App.WhenReady(func() {
+		webOrigin := baseURL
+		cookieVHost := ""
+
+		proxyApplied, proxyErr := configureWebKitNetworkProxy(gateway.ProxyURI())
+		if proxyErr != nil {
+			if uiSmoke {
+				wrapErr := fmt.Errorf("configure WebKit network proxy: %w", proxyErr)
+				_ = writeUISmokeArtifacts(uiSmokeDir, nil, nil, wrapErr)
+				setUISmokeResult(wrapErr, 0, nil)
+				go func() {
+					quitting.Store(true)
+					mygo.App.Quit()
+				}()
+				return
+			}
+			fmt.Fprintf(os.Stderr, "warn: configure WebKit network proxy failed, falling back to loopback port origin: %v\n", proxyErr)
+		} else if proxyApplied {
+			webOrigin = gateway.OriginURL()
+			cookieVHost = gateway.VirtualHost()
+		}
+
 		for _, c := range cookies {
 			path := c.Path
 			if path == "" {
 				path = "/"
 			}
-			domain := c.Domain
-			if domain == "" {
-				domain = "127.0.0.1"
-			}
+			domain := MapCookieDomain(c.Domain, cookieVHost)
 			if err := mygo.Cookies.Set(mygo.Cookie{
 				Name:     c.Name,
 				Value:    c.Value,
@@ -223,13 +276,16 @@ func Run(ctx context.Context, adapter Adapter, opts Options) error {
 			MinHeight:       minHeight,
 			BackgroundColor: meta.BackgroundColor,
 			StateKey:        stateKey,
-			URL:             baseURL + "/",
+			URL:             webOrigin + "/",
 			Page: mygo.PageOptions{
 				PreloadScript:    preload,
 				PreloadAllFrames: true,
 				DevTools:         devTools,
 			},
 		})
+		winMu.Lock()
+		mainWin = win
+		winMu.Unlock()
 
 		type uiSmokeFatal struct {
 			err               error
@@ -263,7 +319,7 @@ func Run(ctx context.Context, adapter Adapter, opts Options) error {
 
 			if uiSmoke {
 				page.OnDidFailLoad(func(e *mygo.LoadError) {
-					if e != nil && (strings.HasPrefix(e.URL, baseURL) || e.URL == "") {
+					if e != nil && (strings.HasPrefix(e.URL, webOrigin) || strings.HasPrefix(e.URL, baseURL) || e.URL == "") {
 						select {
 						case fatalCh <- uiSmokeFatal{err: fmt.Errorf("webview failed to load %s: %s (%d)", e.URL, e.Description, e.Code)}:
 						default:

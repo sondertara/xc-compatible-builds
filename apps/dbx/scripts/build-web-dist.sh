@@ -111,6 +111,8 @@ EOF
     )
 
     pnpm install --frozen-lockfile "${PNPM_FLAGS[@]}" "${STORE_ARGS[@]}"
+    python3 "$SCRIPT_DIR/patch-web-source.py" --self-test
+    python3 "$SCRIPT_DIR/patch-web-source.py" "$SRC_DIR"
     node scripts/clean-desktop-dist.mjs
     pnpm "${PNPM_FLAGS[@]}" exec vite build --config apps/desktop/vite.kylin.config.ts
 )

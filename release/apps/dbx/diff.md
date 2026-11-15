@@ -1,6 +1,6 @@
 - 采用 **MyGO Sidecar 轻量桌面壳 + 官方纯静态 `musl` 版 `dbx-web-bin`** 路线，取代耗时定制的 `webkit2gtk-4.1` 容器方案。
-- 桌面外壳 `dbx-desktop` 使用纯 Go (`CGO_ENABLED=0`) 编译，无 `GLIBC` 版本符号锁，运行时动态加载系统原生 **GTK3 + WebKitGTK 4.0 (`2.38.x`)**，原生继承中文输入法与文件保存对话框。
+- 桌面外壳 `dbx-desktop` 使用纯 Go (`CGO_ENABLED=0`) 编译，无 `GLIBC` 版本符号锁，运行时动态加载系统原生 **GTK3 + WebKitGTK 4.0 (`2.38.x`)**，原生继承中文输入法与文件保存对话框，并通过单实例锁支持重复启动自动唤醒已有窗口。
 - 后端 `dbx-web-bin` 取自上游官方 `browser-static` 发布包，零外部动态库依赖；原地 `exec` 启动并绑定 `Setpgid` + `Pdeathsig` 进程组回收，不释放到 `/tmp`（规避 `/tmp noexec`）。
-- 每次启动动态分配回环空闲端口并生成随机高熵 `DBX_PASSWORD`，外壳自动完成 `/api/auth/login` 后将 `dbx_session` Cookie 预注入 WebView，兼顾免密直入与本机端口安全。
-- 前端静态资源（`share/dbx/dist`，由 `DBX_STATIC_DIR` 挂载）以 `safari15.4` 目标从上游源码重编并执行确定性 CSS 降级：注入多主题 `--dbx-compat-*-rgb` 变量、将裸 `color-mix()` / `oklch()` / `@media` 范围语法降级为传统语法（保留 `@supports` 渐进增强并消除变量覆盖投毒），同时静默桌面端“浏览器过旧”提示横幅。
+- 引擎层通过 `webkit_website_data_manager_set_network_proxy_settings` 将固定无端口虚拟源 `http://com-dbx-desktop.localhost/` 路由至进程内动态端口网关与 `dbx-web-bin`：兼顾 **100% 随机端口零冲突**、**跨重启完整保留 WebKit 原生 `localStorage` / `IndexedDB`（SQL 标签页草稿与界面状态）**、`crypto.subtle` 安全上下文，以及每次启动随机高熵 `DBX_PASSWORD` + `dbx_session` Cookie 免密预注入。
+- 前端静态资源（`share/dbx/dist`，由 `DBX_STATIC_DIR` 挂载）从上游源码移除桌面端无意义的 Web 顶栏“退出登录”图标与设置页“安全（Web 密码/验证码/登出）”页签，并以 `safari15.4` 目标编译 + 确定性 CSS 降级（注入多主题 `--dbx-compat-*-rgb` 变量、将裸 `color-mix()` / `oklch()` / `@media` 范围语法降级为传统语法并保留 `@supports` 渐进增强，静默“浏览器过旧”提示横幅）。
 - 通过 `PageOptions.PreloadScript` 自动注入 `WebKitGTK 2.38.6` 缺失的 ES2023/ES2024 运行时垫片（`toSorted`、`toReversed`、`toSpliced`、`with`、`Object.groupBy`、`Map.groupBy`、`Promise.withResolvers`）。

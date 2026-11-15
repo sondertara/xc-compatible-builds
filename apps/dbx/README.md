@@ -22,6 +22,11 @@ thin pure-Go [`shared/mygo-sidecar`](../../shared/mygo-sidecar) desktop shell:
     `DBX_DISABLE_PASSWORD=0` and `DBX_WEB_CAPTCHA=off`), performs `POST /api/auth/login`,
     verifies `/api/auth/check`, and pre-injects the `dbx_session` HttpOnly cookie into
     WebKitGTK before opening the window.
+  - Routes WebKitGTK through an in-process ephemeral `LocalGateway` (`webkit_website_data_manager_set_network_proxy_settings`)
+    onto the permanent portless virtual origin `http://com-dbx-desktop.localhost/`, keeping
+    100% ephemeral random TCP ports while natively preserving WebKit's `localStorage`,
+    `IndexedDB` (`dbx-app-state` SQL tabs/drafts/editor state), `WebSocket`, and
+    `crypto.subtle` Secure Context across restarts, plus enforcing a single-instance desktop lock.
   - Isolates persistence under `${XDG_DATA_HOME:-~/.local/share}/com.dbx.desktop/data`.
   - Automatically mounts bundled `share/dbx/dist` (or `dist`) beside the binary via
     `DBX_STATIC_DIR`, overriding `dbx-web-bin`'s embedded frontend assets.
@@ -31,9 +36,11 @@ thin pure-Go [`shared/mygo-sidecar`](../../shared/mygo-sidecar) desktop shell:
   - Supports `-smoke-test` (headless sidecar launch, login handshake, and `/` HTTP check)
     and `-ui-smoke <dir>` (real WebKitGTK rendering under `xvfb-run` capturing
     `screenshot.png` + `ui-smoke-report.json` runtime JS/DOM/auth telemetry).
-- `scripts/build-web-dist.sh` + `scripts/patch-web-assets.py`:
-  - Shallow-clones upstream `t8y2/dbx@<tag>` and runs the frontend-only Vite build
-    with `build.target = ["es2020", "safari15.4"]` and `cssTarget = "safari15.4"` (zero Rust rebuild).
+- `scripts/build-web-dist.sh` + `scripts/patch-web-source.py` + `scripts/patch-web-assets.py`:
+  - Shallow-clones upstream `t8y2/dbx@<tag>`, applies fail-closed desktop UI source patches
+    (hiding the Web-only top-right toolbar logout button and Settings `security` tab), and
+    runs the frontend-only Vite build with `build.target = ["es2020", "safari15.4"]` and
+    `cssTarget = "safari15.4"` (zero Rust rebuild).
   - Deterministically lowers unguarded `oklch()` / `color-mix()` / `@media` range syntax
     while injecting per-theme `--dbx-compat-<token>-rgb` variables and preserving
     `@supports` progressive enhancement, and silences the desktop "upgrade your browser" banner.

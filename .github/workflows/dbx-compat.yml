@@ -286,10 +286,12 @@ jobs:
               libwebkit2gtk-4.0-37 (2.38.x), libgtk-3-0
 
           Notes:
-              - Backend data directory defaults to ~/.local/share/com.dbx.desktop/data.
+              - Backend data directory defaults to ~/.local/share/com.dbx.desktop/data,
+                while WebKit browser storage persists under the fixed virtual origin
+                http://com-dbx-desktop.localhost/ across random loopback ports.
               - ~/.local/share/com.dbx.desktop/app/share/dbx/dist/ bundles the
-                WebKitGTK 4.0-compatible frontend (safari15.4 Vite target + CSS
-                fallback lowering) served automatically via DBX_STATIC_DIR.
+                WebKitGTK 4.0-compatible desktop frontend (safari15.4 Vite target,
+                CSS fallback lowering, and Web logout chrome removed) via DBX_STATIC_DIR.
               - This is an unofficial compatibility build. Upstream support does
                 not cover third-party desktop wrappers.
           EOF
