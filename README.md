@@ -13,7 +13,7 @@
 
 | 应用 | 最新兼容版本 | 发布时间 | 架构 | 下载 | 历史 |
 |------|--------------|----------|------|------|------|
-| DBX | 未发布 | — | — | — | — |
+| DBX | `0.6.70` | 2026-11-15 | x86_64 / aarch64 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/dbx-v0.6.70) | [全部](https://github.com/sondertara/xc-compatible-builds/releases?q=dbx-) |
 | GoNavi | `1.2.2` | 2026-11-12 | x86_64 / aarch64 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v1.2.2) | [全部](https://github.com/sondertara/xc-compatible-builds/releases?q=gonavi-) |
 | ThinkRail | `0.4.0` | 2026-11-13 | x86_64 / aarch64 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/thinkrail-v0.4.0) | [全部](https://github.com/sondertara/xc-compatible-builds/releases?q=thinkrail-) |
 
@@ -22,6 +22,7 @@
 
 | 应用 | 版本 | 发布时间 | 下载 |
 |------|------|----------|------|
+| DBX | `0.6.70` | 2026-11-15 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/dbx-v0.6.70) |
 | GoNavi | `1.2.2` | 2026-11-12 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v1.2.2) |
 | GoNavi | `0.9.7` | 2026-09-07 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v0.9.7) |
 | GoNavi | `0.9.4` | 2026-08-25 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v0.9.4) |

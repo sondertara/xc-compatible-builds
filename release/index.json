@@ -1,12 +1,33 @@
 {
   "schema": 1,
   "repository": "sondertara/xc-compatible-builds",
-  "latest_release_at": "2026-11-13T07:08:28Z",
+  "latest_release_at": "2026-11-15T11:45:21Z",
   "apps": [
     {
       "id": "dbx",
       "display_name": "DBX",
-      "versions": []
+      "versions": [
+        {
+          "version": "0.6.70",
+          "tag": "dbx-v0.6.70",
+          "published_at": "2026-11-15T11:45:21Z",
+          "release_url": "https://github.com/sondertara/xc-compatible-builds/releases/tag/dbx-v0.6.70"
+        }
+      ],
+      "latest": {
+        "version": "0.6.70",
+        "tag": "dbx-v0.6.70",
+        "published_at": "2026-11-15T11:45:21Z",
+        "release_url": "https://github.com/sondertara/xc-compatible-builds/releases/tag/dbx-v0.6.70",
+        "assets": [
+          "DBX-0.6.70-linux-aarch64-installer.tar.gz",
+          "DBX-0.6.70-linux-aarch64-kylin.tar.gz",
+          "DBX-0.6.70-linux-amd64-installer.tar.gz",
+          "DBX-0.6.70-linux-amd64-kylin.tar.gz",
+          "SHA256SUMS-aarch64.txt",
+          "SHA256SUMS-amd64.txt"
+        ]
+      }
     },
     {
       "id": "gonavi",
