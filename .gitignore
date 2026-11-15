@@ -1,0 +1,12 @@
+.cache/
+build/
+dist/
+installer-stage/
+*.AppImage
+*.tar.gz
+*.sha256
+SHA256SUMS*.txt
+release-notes.md
+upstream-notes.md
+__pycache__/
+*.pyc

@@ -1,0 +1,403 @@
+name: DBX Kylin compat (glibc 2.31 / WebKitGTK 4.0)
+
+# DBX is adapted via the MyGO WebKitGTK 4.0 desktop shell + upstream's
+# official fully-static musl dbx-web-bin sidecar instead of rebuilding Tauri 2
+# against webkit2gtk-4.1 in a 3-hour custom image.
+# Weekly upstream checks are centralized in .github/workflows/upstream-watch.yml.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "DBX version (e.g. 0.6.70) or tag (v0.6.70); empty = latest release"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dbx-kylin-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  resolve:
+    name: Resolve version
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${{ inputs.version }}"
+          if [ -z "$TAG" ]; then
+            TAG="$(gh api repos/t8y2/dbx/releases/latest --jq .tag_name)"
+          elif [[ "$TAG" != v* ]]; then
+            TAG="v$TAG"
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved $TAG (version $VERSION)"
+
+  build-web:
+    name: Build patched Web frontend
+    needs: resolve
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: "10.27.0"
+
+      - name: Build & patch DBX frontend (WebKitGTK 2.38 compat)
+        run: |
+          set -euo pipefail
+          ./apps/dbx/scripts/build-web-dist.sh \
+            --tag "${{ needs.resolve.outputs.tag }}" \
+            --out dist-web
+          tar -czf dbx-web-dist.tar.gz -C dist-web .
+          ls -lh dbx-web-dist.tar.gz
+
+      - name: Upload patched Web frontend artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: dbx-web-dist-${{ needs.resolve.outputs.version }}
+          path: dbx-web-dist.tar.gz
+          if-no-files-found: error
+
+  build:
+    name: Build (${{ matrix.arch }})
+    needs: [resolve, build-web]
+    runs-on: ${{ matrix.runner }}
+    container:
+      image: ubuntu:20.04
+      options: --shm-size=512m
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            goarch: amd64
+            upstream_arch: x64
+            runner: ubuntu-22.04
+          - arch: aarch64
+            goarch: arm64
+            upstream_arch: arm64
+            runner: ubuntu-24.04-arm
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      TAG: ${{ needs.resolve.outputs.tag }}
+      VERSION: ${{ needs.resolve.outputs.version }}
+      ARCH: ${{ matrix.arch }}
+      GOARCH: ${{ matrix.goarch }}
+      UPSTREAM_ARCH: ${{ matrix.upstream_arch }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install build & compat check dependencies (focal)
+        run: |
+          set -euo pipefail
+          apt-get -o Acquire::Retries=3 update -qq
+          apt-get -o Acquire::Retries=3 install -y --no-install-recommends \
+            ca-certificates curl git file binutils python3 pkg-config \
+            libwebkit2gtk-4.0-dev libgtk-3-dev libayatana-appindicator3-1 \
+            xvfb dbus-x11 xauth fonts-noto-cjk
+
+      - name: Preflight ABI (glibc 2.31, WebKitGTK 4.0 2.38.x)
+        run: |
+          set -euo pipefail
+          getconf GNU_LIBC_VERSION
+          pkg-config --modversion webkit2gtk-4.0
+          pkg-config --modversion gtk+-3.0
+          test "$(getconf GNU_LIBC_VERSION | awk '{print $2}')" = "2.31"
+          WEBKIT="$(pkg-config --modversion webkit2gtk-4.0)"
+          echo "webkit2gtk-4.0: $WEBKIT"
+          case "$WEBKIT" in
+            2.38.*) ;;
+            *) echo "::error::expected WebKitGTK 4.0 2.38.x, got $WEBKIT"; exit 1 ;;
+          esac
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: 'shared/mygo-sidecar/go.mod'
+
+      - name: Run Go unit tests
+        run: |
+          set -euo pipefail
+          (cd shared/mygo-sidecar && go test -count=1 ./...)
+          (cd apps/dbx && go test -count=1 ./...)
+
+      - name: Build dbx-desktop (CGO_ENABLED=0)
+        run: |
+          set -euo pipefail
+          mkdir -p DBX/bin DBX/libexec DBX/share/icons
+          (cd apps/dbx && CGO_ENABLED=0 GOOS=linux GOARCH="${GOARCH}" \
+            go build -trimpath -ldflags="-s -w -X main.version=${VERSION}" \
+            -o "$GITHUB_WORKSPACE/DBX/bin/dbx-desktop" ./cmd/dbx-desktop)
+          cp apps/dbx/assets/icon.png DBX/share/icons/dbx.png
+          chmod 755 DBX/bin/dbx-desktop
+          ./DBX/bin/dbx-desktop --version
+          file DBX/bin/dbx-desktop
+
+      - name: Download upstream static dbx-web-bin
+        run: |
+          set -euo pipefail
+          ASSET="DBX_${VERSION}_${UPSTREAM_ARCH}-browser-static.tar.gz"
+          URL="https://github.com/t8y2/dbx/releases/download/${TAG}/${ASSET}"
+          echo "GET $URL"
+          curl -fL --retry 3 --retry-delay 5 -o dbx-web.tar.gz "$URL"
+          UNPACK_DIR="$(mktemp -d "${RUNNER_TEMP}/dbx-unpack.XXXXXX")"
+          tar -xzf dbx-web.tar.gz -C "$UNPACK_DIR"
+          BIN_PATH="$(find "$UNPACK_DIR" -type f -name 'dbx-web-bin' | head -n1)"
+          if [ -z "$BIN_PATH" ]; then
+            echo "::error::dbx-web-bin not found inside $ASSET"
+            find "$UNPACK_DIR" -maxdepth 3
+            exit 1
+          fi
+          cp "$BIN_PATH" DBX/libexec/dbx-web-bin
+          chmod 755 DBX/libexec/dbx-web-bin
+          rm -rf "$UNPACK_DIR" dbx-web.tar.gz
+          file DBX/libexec/dbx-web-bin
+
+      - name: Download patched Web frontend artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: dbx-web-dist-${{ needs.resolve.outputs.version }}
+          path: .
+
+      - name: Unpack patched Web frontend into DBX/share/dbx/dist
+        run: |
+          set -euo pipefail
+          mkdir -p DBX/share/dbx/dist
+          tar -xzf dbx-web-dist.tar.gz -C DBX/share/dbx/dist
+          rm -f dbx-web-dist.tar.gz
+          test -f DBX/share/dbx/dist/index.html
+
+      - name: Verify binary ABI & live smoke test & JS/CSS compat
+        run: |
+          set -euo pipefail
+          # 1. Verify upstream dbx-web-bin is fully static (no ELF interpreter / DT_NEEDED).
+          if readelf -l DBX/libexec/dbx-web-bin | grep -q 'Requesting program interpreter'; then
+            echo "::error::dbx-web-bin is dynamically linked unexpectedly"
+            exit 1
+          fi
+          if readelf -d DBX/libexec/dbx-web-bin 2>/dev/null | grep -q 'Shared library:'; then
+            echo "::error::dbx-web-bin has shared library dependencies"
+            exit 1
+          fi
+
+          # 2. Verify pure-Go dbx-desktop has no GLIBC > 2.31 version requirement.
+          MAX_GLIBC="$(objdump -T DBX/bin/dbx-desktop 2>/dev/null | grep -oE 'GLIBC_[0-9.]+' | sort -V | tail -1 || true)"
+          echo "dbx-desktop max GLIBC symbol: ${MAX_GLIBC:-none (static)}"
+          if [ -n "$MAX_GLIBC" ] && [ "$(printf '%s\n%s\n' GLIBC_2.31 "$MAX_GLIBC" | sort -V | tail -1)" != "GLIBC_2.31" ]; then
+            echo "::error::dbx-desktop requires $MAX_GLIBC > GLIBC_2.31"
+            exit 1
+          fi
+
+          # 3. Live headless startup + ephemeral auth + HTTP probe via dbx-desktop -smoke-test.
+          SMOKE_XDG="$RUNNER_TEMP/dbx-smoke"
+          rm -rf "$SMOKE_XDG"
+          XDG_DATA_HOME="$SMOKE_XDG" ./DBX/bin/dbx-desktop -smoke-test
+          rm -rf "$SMOKE_XDG"
+
+          # 4. WebKitGTK 2.38 / JSC 2.38 hard gate (JS parse blockers + zero unguarded CSS).
+          python3 apps/dbx/scripts/verify-web-compat.py --self-test
+          python3 apps/dbx/scripts/verify-web-compat.py --dir ./DBX/share/dbx/dist --strict-css
+          python3 apps/dbx/scripts/verify-web-compat.py --bin ./DBX/libexec/dbx-web-bin --static-dir ./DBX/share/dbx/dist --strict-css
+
+      - name: Run WebKitGTK 4.0 (2.38.x) Xvfb UI render & screenshot smoke
+        run: |
+          set -euo pipefail
+          UI_SMOKE_OUT="$GITHUB_WORKSPACE/ui-smoke-${ARCH}"
+          SMOKE_HOME="$RUNNER_TEMP/dbx-ui-smoke-home"
+          rm -rf "$UI_SMOKE_OUT" "$SMOKE_HOME"
+          mkdir -p "$UI_SMOKE_OUT" "$SMOKE_HOME/data" "$SMOKE_HOME/config"
+          XDG_DATA_HOME="$SMOKE_HOME/data" \
+          XDG_CONFIG_HOME="$SMOKE_HOME/config" \
+          GDK_BACKEND=x11 \
+          WAYLAND_DISPLAY="" \
+          WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1 \
+          WEBKIT_DISABLE_COMPOSITING_MODE=1 \
+          WEBKIT_DISABLE_DMABUF_RENDERER=1 \
+            xvfb-run -a -s "-screen 0 1440x900x24" \
+            dbus-run-session -- \
+            ./DBX/bin/dbx-desktop -ui-smoke "$UI_SMOKE_OUT"
+          cat "$UI_SMOKE_OUT/ui-smoke-report.json"
+          ls -lh "$UI_SMOKE_OUT"
+          rm -rf "$SMOKE_HOME"
+
+      - name: Upload WebKitGTK 4.0 UI smoke screenshot & report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: dbx-webkit40-ui-smoke-${{ env.VERSION }}-${{ matrix.arch }}
+          path: ui-smoke-${{ matrix.arch }}/*
+          if-no-files-found: warn
+
+      - name: Package & test installer
+        run: |
+          set -euo pipefail
+          mkdir -p dist installer-stage
+
+          cat > README-KYLIN.txt <<EOF
+          DBX ${VERSION} for Kylin V10 / glibc 2.31 / WebKitGTK 4.0 (2.38.x)
+          ==================================================================
+          This build wraps upstream DBX's official fully-static musl dbx-web-bin
+          inside a pure-Go (CGO_ENABLED=0) MyGO desktop shell that dlopens the
+          host system's GTK3 and libwebkit2gtk-4.0.so.37 at runtime.
+
+          Install (single command, XDG standard layout):
+              tar -xzf DBX-${VERSION}-linux-${ARCH}-installer.tar.gz
+              ./installer
+
+          The installer writes:
+              ~/.local/share/com.dbx.desktop/app/bin/dbx-desktop
+              ~/.local/share/com.dbx.desktop/app/libexec/dbx-web-bin
+              ~/.local/share/com.dbx.desktop/app/share/dbx/dist/
+              ~/.local/share/applications/DBX.desktop
+              ~/.local/share/com.dbx.desktop/uninstall
+
+          Portable alternative (no desktop entry):
+              tar -xzf DBX-${VERSION}-linux-${ARCH}-kylin.tar.gz
+              ./DBX/bin/dbx-desktop
+
+          Requirements:
+              glibc >= 2.31
+              libwebkit2gtk-4.0-37 (2.38.x), libgtk-3-0
+
+          Notes:
+              - Backend data directory defaults to ~/.local/share/com.dbx.desktop/data.
+              - ~/.local/share/com.dbx.desktop/app/share/dbx/dist/ bundles the
+                WebKitGTK 4.0-compatible frontend (safari15.4 Vite target + CSS
+                fallback lowering) served automatically via DBX_STATIC_DIR.
+              - This is an unofficial compatibility build. Upstream support does
+                not cover third-party desktop wrappers.
+          EOF
+
+          tar -czf "dist/DBX-${VERSION}-linux-${ARCH}-kylin.tar.gz" \
+            DBX README-KYLIN.txt
+
+          cp apps/dbx/installer.sh installer-stage/installer
+          cat "dist/DBX-${VERSION}-linux-${ARCH}-kylin.tar.gz" >> installer-stage/installer
+          chmod 755 installer-stage/installer
+          cp README-KYLIN.txt installer-stage/README-KYLIN.txt
+          tar -czf "dist/DBX-${VERSION}-linux-${ARCH}-installer.tar.gz" \
+            -C installer-stage installer README-KYLIN.txt
+
+          INSTALL_HOME="$RUNNER_TEMP/dbx-install"
+          rm -rf "$INSTALL_HOME"
+          mkdir -p "$INSTALL_HOME/.local/share"
+          HOME="$INSTALL_HOME" XDG_DATA_HOME="$INSTALL_HOME/.local/share" \
+            ./installer-stage/installer --quiet --no-launch
+          INSTALLED="$INSTALL_HOME/.local/share/com.dbx.desktop/app"
+          test -x "$INSTALLED/bin/dbx-desktop"
+          test -x "$INSTALLED/libexec/dbx-web-bin"
+          test -f "$INSTALLED/share/dbx/dist/index.html"
+          test -f "$INSTALL_HOME/.local/share/applications/DBX.desktop"
+          HOME="$INSTALL_HOME" XDG_DATA_HOME="$INSTALL_HOME/.local/share" \
+            "$INSTALLED/bin/dbx-desktop" -smoke-test
+          HOME="$INSTALL_HOME" XDG_DATA_HOME="$INSTALL_HOME/.local/share" \
+            ./installer-stage/installer --uninstall --quiet
+          test ! -e "$INSTALLED"
+          test ! -e "$INSTALL_HOME/.local/share/com.dbx.desktop/uninstall"
+          test ! -e "$INSTALL_HOME/.local/share/applications/DBX.desktop"
+          rm -rf "$INSTALL_HOME"
+
+          (cd dist && sha256sum DBX-*.tar.gz > "SHA256SUMS-${ARCH}.txt")
+          ls -lh dist installer-stage
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: dbx-kylin-${{ env.VERSION }}-${{ matrix.arch }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    needs: [resolve, build]
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: dbx-kylin-${{ needs.resolve.outputs.version }}-*
+          path: dist
+          merge-multiple: true
+
+      - name: Fetch upstream release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPSTREAM_TAG: ${{ needs.resolve.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh api "repos/t8y2/dbx/releases/tags/${UPSTREAM_TAG}" --jq .body > upstream-notes.md \
+            || echo '_上游未发布 Release Notes。_' > upstream-notes.md
+
+      - name: Render release notes
+        run: |
+          set -euo pipefail
+          python3 scripts/render-release-notes.py \
+            --template release/notes-template.md \
+            --out release-notes.md \
+            --assets-dir dist \
+            --upstream-body upstream-notes.md \
+            --app-id dbx \
+            --display-name DBX \
+            --version "${{ needs.resolve.outputs.version }}" \
+            --upstream-url "https://github.com/t8y2/dbx/releases/tag/${{ needs.resolve.outputs.tag }}" \
+            --upstream-tag "${{ needs.resolve.outputs.tag }}" \
+            --runtime "libwebkit2gtk-4.0-37 (2.38.x), GTK3, libsoup2.4" \
+            --install-file release/apps/dbx/install.md \
+            --diff-file release/apps/dbx/diff.md \
+            --check-file release/apps/dbx/check.md \
+            --run-id "$GITHUB_RUN_ID" \
+            --commit "$GITHUB_SHA"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ needs.resolve.outputs.tag }}
+          VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          set -euo pipefail
+          REL="dbx-${TAG}"
+          TITLE="DBX ${VERSION} (Kylin V10 / glibc 2.31)"
+          if gh release view "$REL" --repo "$GH_REPO" >/dev/null 2>&1; then
+            gh release edit "$REL" --repo "$GH_REPO" \
+              --title "$TITLE" --notes-file release-notes.md --latest=false
+          else
+            gh release create "$REL" --repo "$GH_REPO" \
+              --title "$TITLE" --notes-file release-notes.md --latest=false
+          fi
+          gh release upload "$REL" dist/* --clobber --repo "$GH_REPO"
+
+  index:
+    needs: [release]
+    if: needs.release.result == 'success'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release-index.yml

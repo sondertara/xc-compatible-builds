@@ -1,31 +1,26 @@
+# DBX is adapted via the MyGO WebKitGTK 4.0 desktop shell + upstream's
+# official fully-static musl dbx-web-bin sidecar, built by
+# .github/workflows/dbx-compat.yml (not app-build.yml).
+#
+# Why not Tauri 2 (app-build.yml):
+# Tauri 2 / wry requires webkit2gtk-4.1 (>= 2.40) and a 3-hour custom base
+# image on glibc 2.31, whereas dbx-desktop uses CGO_ENABLED=0 MyGO (purego
+# dlopen against Kylin V10's system libwebkit2gtk-4.0.so.37 / 2.38.x and GTK3)
+# and launches upstream DBX_<ver>_<x64|arm64>-browser-static.tar.gz's
+# static dbx-web-bin in-place.
 app_id: dbx
 upstream_repo: t8y2/dbx
 display_name: DBX
-build_type: tauri-appimage
-workflow: app-build.yml
+build_type: mygo-sidecar
+workflow: dbx-compat.yml
 
-# !! 前置条件 !!
-# Tauri 2 (wry) 需要 webkit2gtk-4.1 (>=2.40)，但 glibc 2.31 的公共源
-# (bullseye/focal main+security) 均只有 4.0 API —— 已实测确认。
-# 必须先在 Actions 里手动跑一次 "Build Compat Image" 工作流
-# （构建 debian:bullseye + 源码 WebKitGTK 2.44.4 镜像，约 2~3h/架构，仅需一次），
-# 产物在 ghcr.io/sondertara/xc-compat-tauri2:{amd64,aarch64}
-container_image: "ghcr.io/sondertara/xc-compat-tauri2:amd64"
-container_image_arm64: "ghcr.io/sondertara/xc-compat-tauri2:aarch64"
+container_image: "ubuntu:20.04"
+container_image_arm64: ""
 
-node_version: "22"
-pnpm_version: "10.27.0"
-# 与上游官方 release.yml 一致（1.88 只是 MSRV，会编译失败）
-rust_version: "1.97.1"
-
-# webkit2gtk-4.1 及其编译依赖已内置在定制镜像中，这里只装轻量运行/链接依赖
 build_deps: >
-  libayatana-appindicator3-dev librsvg2-dev libxdo-dev
-  patchelf libssl-dev xdg-utils libsecret-1-dev
+  libwebkit2gtk-4.0-dev libgtk-3-dev pkg-config binutils file python3
 
-# {target} 会替换为 x86_64-unknown-linux-gnu / aarch64-unknown-linux-gnu
-install_command: pnpm install --frozen-lockfile
-build_command: pnpm tauri build --bundles appimage --target {target}
-
-# 与官方命名一致：DBX_0.5.91_amd64.AppImage / DBX_0.5.91_aarch64.AppImage
-artifact_name: "DBX_{version}_{arch}.AppImage"
+# Upstream artifact is DBX_<version>_<x64|arm64>-browser-static.tar.gz.
+# Sidecar framework lives in shared/mygo-sidecar/; DBX adapter & packaging
+# assets live in apps/dbx/.
+artifact_name: "DBX-{version}-linux-{arch}-installer.tar.gz"

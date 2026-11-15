@@ -1,0 +1,6 @@
+- 采用 **MyGO Sidecar 轻量桌面壳 + 官方纯静态 `musl` 版 `dbx-web-bin`** 路线，取代耗时定制的 `webkit2gtk-4.1` 容器方案。
+- 桌面外壳 `dbx-desktop` 使用纯 Go (`CGO_ENABLED=0`) 编译，无 `GLIBC` 版本符号锁，运行时动态加载系统原生 **GTK3 + WebKitGTK 4.0 (`2.38.x`)**，原生继承中文输入法与文件保存对话框。
+- 后端 `dbx-web-bin` 取自上游官方 `browser-static` 发布包，零外部动态库依赖；原地 `exec` 启动并绑定 `Setpgid` + `Pdeathsig` 进程组回收，不释放到 `/tmp`（规避 `/tmp noexec`）。
+- 每次启动动态分配回环空闲端口并生成随机高熵 `DBX_PASSWORD`，外壳自动完成 `/api/auth/login` 后将 `dbx_session` Cookie 预注入 WebView，兼顾免密直入与本机端口安全。
+- 前端静态资源（`share/dbx/dist`，由 `DBX_STATIC_DIR` 挂载）以 `safari15.4` 目标从上游源码重编并执行确定性 CSS 降级：注入多主题 `--dbx-compat-*-rgb` 变量、将裸 `color-mix()` / `oklch()` / `@media` 范围语法降级为传统语法（保留 `@supports` 渐进增强并消除变量覆盖投毒），同时静默桌面端“浏览器过旧”提示横幅。
+- 通过 `PageOptions.PreloadScript` 自动注入 `WebKitGTK 2.38.6` 缺失的 ES2023/ES2024 运行时垫片（`toSorted`、`toReversed`、`toSpliced`、`with`、`Object.groupBy`、`Map.groupBy`、`Promise.withResolvers`）。

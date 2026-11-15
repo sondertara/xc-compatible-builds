@@ -33,6 +33,8 @@ Rules:
 
 | id | build_type | workflow | assets |
 |----|------------|----------|--------|
-| dbx | tauri-appimage | `app-build.yml` | none |
+| dbx | mygo-sidecar | `dbx-compat.yml` | `adapter.go`, `cmd/`, `assets/`, `installer.sh`, `scripts/` |
 | gonavi | go-wails | `gonavi-build.yml` | none |
 | thinkrail | prebuilt-wrapper | `thinkrail-compat.yml` | `patches/`, `third_party/` |
+
+Reusable cross-app host code (such as `shared/mygo-sidecar/` for pure-Go WebKitGTK 4.0 sidecar wrappers) lives under `shared/`.
