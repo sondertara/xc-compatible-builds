@@ -20,6 +20,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import quote
 
 import yaml
 
@@ -27,6 +28,12 @@ ROOT = Path(__file__).resolve().parent.parent
 START = "<!-- releases:start -->"
 END = "<!-- releases:end -->"
 SEMVER = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$")
+
+ARCH_TOKENS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("x86_64", ("amd64", "x86_64", "x64")),
+    ("aarch64", ("aarch64", "arm64")),
+)
+METADATA_SUFFIXES = (".sha256", ".sha256sum", ".txt", ".sig", ".asc", ".json")
 
 
 def run(args: list[str], env: dict | None = None) -> str:
@@ -42,7 +49,7 @@ def load_apps() -> list[dict]:
             {
                 "id": entry["id"],
                 "display_name": cfg.get("display_name") or entry["id"],
-                "upstream": cfg.get("upstream_repo", ""),
+                "upstream": (cfg.get("upstream_repo") or "").strip(),
             }
         )
     return apps
@@ -97,27 +104,64 @@ def version_of(tag: str) -> str:
     return tag.split("-", 1)[1].lstrip("v")
 
 
-def archs(assets: list[dict]) -> str:
-    found = set()
-    for a in assets:
-        n = a["name"].lower()
-        if any(x in n for x in ("amd64", "x86_64", "x64")):
-            found.add("x86_64")
-        if any(x in n for x in ("aarch64", "arm64")):
-            found.add("aarch64")
-    order = ["x86_64", "aarch64"]
-    return " / ".join(x for x in order if x in found) or "—"
+def _is_package_asset(name: str) -> bool:
+    low = name.lower()
+    if "sha256" in low or low.endswith(METADATA_SUFFIXES):
+        return False
+    return True
+
+
+def _asset_priority(name: str) -> tuple[int, str]:
+    low = name.lower()
+    if "installer" in low:
+        return (0, low)
+    if low.endswith(".appimage"):
+        return (1, low)
+    if low.endswith((".deb", ".rpm")):
+        return (2, low)
+    if low.endswith((".tar.gz", ".tgz", ".tar.xz", ".tar.zst")):
+        return (3, low)
+    return (4, low)
+
+
+def pick_arch_downloads(repo: str, tag: str, assets: list[dict]) -> list[tuple[str, str]]:
+    """Return ordered `(arch_label, download_url)` pairs for primary deliverables."""
+    picked: list[tuple[str, str]] = []
+    for arch_label, tokens in ARCH_TOKENS:
+        matches = [
+            a
+            for a in assets
+            if _is_package_asset(a.get("name", ""))
+            and any(tok in a["name"].lower() for tok in tokens)
+        ]
+        if not matches:
+            continue
+        matches.sort(key=lambda a: _asset_priority(a["name"]))
+        best = matches[0]
+        dl_url = best.get("url") or (
+            f"https://github.com/{repo}/releases/download/{quote(tag)}/{quote(best['name'])}"
+        )
+        picked.append((arch_label, dl_url))
+    return picked
+
+
+def format_app_cell(app: dict) -> str:
+    name = app["display_name"]
+    upstream = app.get("upstream", "")
+    if upstream:
+        return f"[**{name}**](https://github.com/{upstream})"
+    return f"**{name}**"
 
 
 def render_table(repo: str, apps: list[dict], releases: list[dict]) -> str:
     lines = [
         START,
-        "> 本表由 `.github/workflows/release-index.yml` 自动生成，请勿手工编辑。",
         "",
-        "| 应用 | 最新兼容版本 | 发布时间 | 架构 | 下载 | 历史 |",
-        "|------|--------------|----------|------|------|------|",
+        "| 应用 | 最新版本 | 发布日期 | 下载 |",
+        "| :--- | :--- | :--- | :--- |",
     ]
-    history_rows = []
+    history_parts: list[str] = []
+
     for app in apps:
         candidates = []
         for rel in releases:
@@ -127,39 +171,38 @@ def render_table(repo: str, apps: list[dict], releases: list[dict]) -> str:
             if sv:
                 candidates.append((sv, rel))
         candidates.sort(key=lambda x: x[0], reverse=True)
-        if not candidates:
-            lines.append(
-                f"| {app['display_name']} | 未发布 | — | — | — | — |"
-            )
-            continue
-        sv, rel = candidates[0]
-        meta = fetch_assets(repo, rel["tagName"])
-        date = (meta.get("publishedAt") or rel.get("publishedAt") or "")[:10]
-        url = meta.get("url") or f"https://github.com/{repo}/releases/tag/{rel['tagName']}"
-        history = f"https://github.com/{repo}/releases?q={app['id']}-"
-        lines.append(
-            f"| {app['display_name']} | `{version_of(rel['tagName'])}` | {date} | "
-            f"{archs(meta.get('assets', []))} | [Release]({url}) | [全部]({history}) |"
-        )
-        for _, old in candidates:
-            history_rows.append(
-                f"| {app['display_name']} | `{version_of(old['tagName'])}` | "
-                f"{(old.get('publishedAt') or '')[:10]} | "
-                f"[Release](https://github.com/{repo}/releases/tag/{old['tagName']}) |"
-            )
 
-    lines.extend(
-        [
-            "",
-            "<details>",
-            "<summary>全部兼容版本（按应用分组）</summary>",
-            "",
-            "| 应用 | 版本 | 发布时间 | 下载 |",
-            "|------|------|----------|------|",
+        app_cell = format_app_cell(app)
+        if not candidates:
+            lines.append(f"| {app_cell} | 未发布 | — | — |")
+            continue
+
+        _, rel = candidates[0]
+        tag = rel["tagName"]
+        meta = fetch_assets(repo, tag)
+        date = (meta.get("publishedAt") or rel.get("publishedAt") or "")[:10]
+        rel_url = meta.get("url") or f"https://github.com/{repo}/releases/tag/{tag}"
+
+        dl_links = [
+            f"[{arch_label}]({dl_url})"
+            for arch_label, dl_url in pick_arch_downloads(repo, tag, meta.get("assets", []))
         ]
-    )
-    lines.extend(history_rows or ["| — | — | — | — |"])
-    lines.extend(["", "</details>", "", END])
+        dl_links.append(f"[Release]({rel_url})")
+        lines.append(
+            f"| {app_cell} | `{version_of(tag)}` | {date} | {' · '.join(dl_links)} |"
+        )
+
+        if len(candidates) > 1:
+            older_links = [
+                f"[`{version_of(old['tagName'])}`](https://github.com/{repo}/releases/tag/{old['tagName']})"
+                for _, old in candidates[1:]
+            ]
+            history_parts.append(f"**{app['display_name']}** {' · '.join(older_links)}")
+
+    if history_parts:
+        lines.extend(["", "- **历史版本**：" + "；".join(history_parts)])
+
+    lines.extend(["", END])
     return "\n".join(lines)
 
 

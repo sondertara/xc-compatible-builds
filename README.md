@@ -9,26 +9,14 @@
 ## 兼容版本下载
 
 <!-- releases:start -->
-> 本表由 `.github/workflows/release-index.yml` 自动生成，请勿手工编辑。
 
-| 应用 | 最新兼容版本 | 发布时间 | 架构 | 下载 | 历史 |
-|------|--------------|----------|------|------|------|
-| DBX | `0.6.70` | 2026-11-15 | x86_64 / aarch64 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/dbx-v0.6.70) | [全部](https://github.com/sondertara/xc-compatible-builds/releases?q=dbx-) |
-| GoNavi | `1.2.2` | 2026-11-12 | x86_64 / aarch64 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v1.2.2) | [全部](https://github.com/sondertara/xc-compatible-builds/releases?q=gonavi-) |
-| ThinkRail | `0.4.0` | 2026-11-13 | x86_64 / aarch64 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/thinkrail-v0.4.0) | [全部](https://github.com/sondertara/xc-compatible-builds/releases?q=thinkrail-) |
+| 应用 | 最新版本 | 发布日期 | 下载 |
+| :--- | :--- | :--- | :--- |
+| [**DBX**](https://github.com/t8y2/dbx) | `0.6.70` | 2026-11-15 | [x86_64](https://github.com/sondertara/xc-compatible-builds/releases/download/dbx-v0.6.70/DBX-0.6.70-linux-amd64-installer.tar.gz) · [aarch64](https://github.com/sondertara/xc-compatible-builds/releases/download/dbx-v0.6.70/DBX-0.6.70-linux-aarch64-installer.tar.gz) · [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/dbx-v0.6.70) |
+| [**GoNavi**](https://github.com/Syngnat/GoNavi) | `1.2.2` | 2026-11-12 | [x86_64](https://github.com/sondertara/xc-compatible-builds/releases/download/gonavi-v1.2.2/GoNavi-1.2.2-Linux-Amd64.tar.gz) · [aarch64](https://github.com/sondertara/xc-compatible-builds/releases/download/gonavi-v1.2.2/GoNavi-1.2.2-Linux-Arm64.tar.gz) · [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v1.2.2) |
+| [**ThinkRail**](https://github.com/JetBrains/thinkrail) | `0.4.0` | 2026-11-13 | [x86_64](https://github.com/sondertara/xc-compatible-builds/releases/download/thinkrail-v0.4.0/ThinkRail-0.4.0-linux-amd64-installer.tar.gz) · [aarch64](https://github.com/sondertara/xc-compatible-builds/releases/download/thinkrail-v0.4.0/ThinkRail-0.4.0-linux-aarch64-installer.tar.gz) · [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/thinkrail-v0.4.0) |
 
-<details>
-<summary>全部兼容版本（按应用分组）</summary>
-
-| 应用 | 版本 | 发布时间 | 下载 |
-|------|------|----------|------|
-| DBX | `0.6.70` | 2026-11-15 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/dbx-v0.6.70) |
-| GoNavi | `1.2.2` | 2026-11-12 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v1.2.2) |
-| GoNavi | `0.9.7` | 2026-09-07 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v0.9.7) |
-| GoNavi | `0.9.4` | 2026-08-25 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v0.9.4) |
-| ThinkRail | `0.4.0` | 2026-11-13 | [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/thinkrail-v0.4.0) |
-
-</details>
+- **历史版本**：**GoNavi** [`0.9.7`](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v0.9.7) · [`0.9.4`](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v0.9.4)
 
 <!-- releases:end -->
 
@@ -74,12 +62,12 @@
 
 并非所有跨平台桌面应用都需要耗时数小时重编整套 WebKitGTK。本仓库按上游架构特征采用最小侵入路径：
 
-| 适配路线 | 适用场景 | 核心实现机制 | 构建容器基底 | 代表配置与文档 |
-|----------|----------|--------------|--------------|----------------|
-| **MyGO Web Sidecar** | 上游提供纯静态/独立 Web 后端的应用 | `CGO_ENABLED=0` 纯 Go 外壳运行时 `dlopen` 系统 GTK3 + WebKitGTK 4.0；通过 WebKit 引擎代理将固定虚拟源 `http://<app>.localhost/` 路由至随机端口后端（零端口冲突且跨重启完整保留 `localStorage` / `IndexedDB`），前端以 `safari15.4` 目标重编并降级现代 CSS | `ubuntu:20.04` | [`configs/dbx.yml`](configs/dbx.yml)<br>[`apps/dbx/`](apps/dbx/README.md)<br>[`shared/mygo-sidecar/`](shared/mygo-sidecar/README.md) |
-| **Go / Wails v2** | Wails v2 桌面应用 | 清理上游针对 Ubuntu 22.04+ 硬编码的 `webkit2_41` 构建标签，基于 `go.mod` 锁定 Wails CLI 版本直接链接 WebKitGTK 4.0 头文件原生编译 | `ubuntu:20.04` | [`configs/gonavi.yml`](configs/gonavi.yml) |
-| **Electrobun Wrapper** | 发布预编译产物树的 Electrobun 应用 | 保留上游主体产物，仅针对 WebKitGTK 4.0 + `libsoup-2.4` 重编替换 `libNativeWrapper.so`；对前端 Bundle 执行 JSC 2.38 语法转换，并随包附带麒麟缺失的 `libayatana-appindicator3` 运行库 | `ubuntu:20.04` | [`configs/thinkrail.yml`](configs/thinkrail.yml)<br>[`apps/thinkrail/`](apps/thinkrail/README.md) |
-| **Tauri 2 / AppImage** | 强耦合 `wry`（要求 `webkit2gtk-4.1` ≥ 2.40）且无独立 Web 后端的 Tauri 2 应用 | 在 `debian:bullseye`（`glibc 2.31`）基底镜像内预编译 `glib 2.72.4` + `libsoup 3.2.3` + `WebKitGTK 2.44.4` 并缓存至 GHCR，供后续构建直接复用 | `ghcr.io/.../xc-compat-tauri2` | [`configs/template.yml`](configs/template.yml)<br>[`docker/tauri2-webkit41.Dockerfile`](docker/tauri2-webkit41.Dockerfile) |
+| 适配路线 | 适用场景 | 核心实现机制 | 配置与说明 |
+| :--- | :--- | :--- | :--- |
+| **MyGO Web Sidecar** | 上游提供纯静态/独立 Web 后端的应用 | `ubuntu:20.04` 构建 `CGO_ENABLED=0` 纯 Go 外壳运行时 `dlopen` 系统 GTK3 + WebKitGTK 4.0；通过引擎代理将固定源 `http://<app>.localhost/` 路由至随机端口后端，前端降级适配 Safari 15.4 | [`dbx.yml`](configs/dbx.yml) · [`apps/dbx`](apps/dbx/README.md) · [`mygo-sidecar`](shared/mygo-sidecar/README.md) |
+| **Go / Wails v2** | Wails v2 桌面应用 | `ubuntu:20.04` 下清理上游针对 Ubuntu 22.04+ 硬编码的 `webkit2_41` 标签，按 `go.mod` 锁定 Wails CLI 直接链接 WebKitGTK 4.0 原生编译 | [`gonavi.yml`](configs/gonavi.yml) |
+| **Electrobun Wrapper** | 发布预编译产物树的 Electrobun 应用 | `ubuntu:20.04` 下仅针对 WebKitGTK 4.0 + `libsoup-2.4` 重编替换 `libNativeWrapper.so`；转换前端 JSC 2.38 语法并随包附带 `libayatana-appindicator3` | [`thinkrail.yml`](configs/thinkrail.yml) · [`apps/thinkrail`](apps/thinkrail/README.md) |
+| **Tauri 2 / AppImage** | 强耦合 `wry`（需 `webkit2gtk-4.1`）且无独立 Web 后端的应用 | 在 `debian:bullseye`（`glibc 2.31`）定制镜像内预编译 `WebKitGTK 2.44.4` + `libsoup 3.2.3` 并缓存至 GHCR 复用 | [`template.yml`](configs/template.yml) · [`Dockerfile`](docker/tauri2-webkit41.Dockerfile) |
 
 ---
 
