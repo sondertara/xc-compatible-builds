@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -115,8 +116,7 @@ func TestStopKillsProcessGroupDescendants(t *testing.T) {
 	dead := false
 	reapDeadline := time.Now().Add(1 * time.Second)
 	for time.Now().Before(reapDeadline) {
-		err := syscall.Kill(grandchildPID, 0)
-		if errors.Is(err, syscall.ESRCH) {
+		if isProcessGoneOrZombie(grandchildPID) {
 			dead = true
 			break
 		}
@@ -126,6 +126,30 @@ func TestStopKillsProcessGroupDescendants(t *testing.T) {
 		_ = syscall.Kill(grandchildPID, syscall.SIGKILL)
 		t.Fatalf("grandchild pid %d survived Stop", grandchildPID)
 	}
+}
+
+func isProcessGoneOrZombie(pid int) bool {
+	err := syscall.Kill(pid, 0)
+	if errors.Is(err, syscall.ESRCH) {
+		return true
+	}
+	if runtime.GOOS == "linux" {
+		raw, readErr := os.ReadFile(fmt.Sprintf("/proc/%d/stat", pid))
+		if os.IsNotExist(readErr) || errors.Is(readErr, syscall.ESRCH) {
+			return true
+		}
+		if readErr == nil {
+			s := string(raw)
+			// /proc/<pid>/stat format: "<pid> (<comm>) <state> ..."; <comm> may contain ')' or spaces.
+			if idx := strings.LastIndex(s, ") "); idx != -1 && idx+2 < len(s) {
+				switch s[idx+2] {
+				case 'Z', 'X', 'x':
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func TestWaitHTTPReady(t *testing.T) {
