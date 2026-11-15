@@ -1,12 +1,12 @@
-# xc-compatible-builds — 麒麟 V10 兼容构建仓库
+# xc-compatible-builds — 麒麟 V10 桌面应用兼容构建仓库
 
-> 目标：让官方基于新系统构建的桌面软件能在**麒麟桌面版 V10（glibc 2.31）**上运行。
-> 原理：在 glibc 2.31 基底容器内重新编译，产物向下精确匹配。
->
-> 这里**不只支持 Rust/Tauri**。Tauri 只是其中一条路径；Go/Wails、Electrobun、MyGO Web Sidecar
-> 等非 Tauri 桌面方案同样可以接入，见下面的“四条构建路径”。
+面向 **银河麒麟桌面版 V10**（以及 Ubuntu 20.04、Debian 11、统信 UOS 等 `glibc 2.31` + `WebKitGTK 4.0 / 2.38.x` 同代 Linux 桌面环境），提供上游现代跨平台桌面软件的 **`x86_64` 与 `aarch64` 双架构兼容发行包**，并按周自动巡检上游更新。
 
-## 兼容版本索引
+针对不同上游架构提供 **四条技术适配路线**（**MyGO Web Sidecar**、**Go / Wails v2**、**Electrobun Wrapper 替换**、**Tauri 2 定制镜像**），在优先复用系统原生 GTK3 / WebKitGTK 4.0 的前提下消除高版本 `GLIBC`、`webkit2gtk-4.1` 与现代前端引擎语法壁垒。
+
+---
+
+## 兼容版本下载
 
 <!-- releases:start -->
 > 本表由 `.github/workflows/release-index.yml` 自动生成，请勿手工编辑。
@@ -32,141 +32,120 @@
 
 <!-- releases:end -->
 
-### 为什么不能只看 GitHub Releases
+> 发布标签统一采用 `<app-id>-v<semver>`（如 `dbx-v0.6.70`），机器可读版本清单同步输出于 [`release/index.json`](release/index.json)。
 
-GitHub 的 Releases 页面是**按时间排的一条线**，没有“应用分组”，也没有“每个应用各自的最新版”：
+---
 
-- 发布 ThinkRail 后，列表顶部是 ThinkRail；发布 GoNavi 后，它又跑到顶部；
-- 全局只有一个 “Latest” 徽章，无法同时标出 ThinkRail / GoNavi / DBX 各自的最新版；
-- 同一应用的历史版本散落在时间线里，翻起来很费劲。
+## 安装与运行
 
-解决办法不是改 GitHub 的排序，而是约定并生成索引：
+### 系统环境基线
 
-1. **Tag 命名**固定为 `<app-id>-v<semver>`，例如 `thinkrail-v0.4.0`、`gonavi-v1.2.2`；
-2. 上面的表按应用分组，取**语义化版本最高**的稳定版，不使用 GitHub 的全局 Latest；
-3. `<details>` 里列出每个应用的全部兼容版本；
-4. `release/index.json` 提供同样的机器可读数据，方便脚本/页面消费；
-5. 索引由 `.github/workflows/release-index.yml` 在每次 release 后自动刷新，也可手动或每天定时刷新。
+- **CPU 架构**：`x86_64`（`amd64`）或 `aarch64`（`arm64`）
+- **基础运行库**：`glibc >= 2.31`、`libgtk-3-0`、`libwebkit2gtk-4.0-37`（`2.38.x`，麒麟桌面版 V10 / Ubuntu 20.04 默认预装）
 
-如果以后要更强的筛选/搜索，可以在 `release/index.json` 之上加一个 GitHub Pages 仪表盘；README 索引仍然是最直接的入口。
+### 安装方式
 
+各应用 Release 页面按软件形态提供以下产物（详见对应 Release 说明）：
 
-## 四条构建路径
-
-| 路径 | 适用应用 | 构建方式 | 参考 |
-|------|----------|----------|------|
-| **Tauri / AppImage** | Tauri 2（wry，需要 WebKitGTK 4.1） | 定制镜像 + `app-build.yml` → `reusable-appimage.yml` | `configs/template.yml` |
-| **Wails / Go** | Wails v2（WebKitGTK 4.0） | `ubuntu:20.04` + `gonavi-build.yml` | `configs/gonavi.yml` |
-| **Electrobun / 预编译树** | Electrobun（替换 `libNativeWrapper.so`） | 重编译 wrapper + `thinkrail-compat.yml` | `configs/thinkrail.yml` |
-| **MyGO / Web Sidecar** | 上游提供纯静态 Web 后端的应用 | `CGO_ENABLED=0` MyGO 外壳 + 官方静态后端 + `dbx-compat.yml` | `configs/dbx.yml` |
-
-不是所有应用都能套 `template.yml`。Tauri 之外的路径需要自己的入口 workflow，
-但都通过同一个清单字段 `workflow:` 接入每周巡检。
-
-> **Wails 的坑**：上游 `wails.json` 可能把 `build:tags` 钉在 `webkit2_41`
-> （面向 Ubuntu 22.04+）。`gonavi-build.yml` 在构建前清空该字段，否则 focal
-> 的 WebKitGTK 4.0 头文件会编译失败；Wails CLI 版本则从 `go.mod` 读取。
-
-## 工作流一览
-
-| 工作流 | 作用 | 触发 |
-|--------|------|------|
-| **Upstream Watch** | 遍历 `configs/apps.yml`，查上游最新 Release，按需 dispatch 对应构建 | 手动 / 每周一 02:00 UTC / push（仅 dry-run） |
-| **Build Compat Image** | 构建定制镜像（bullseye + 源码编译 WebKitGTK 4.1），推 ghcr | 手动 / Dockerfile 变更 |
-| **App Build** | Tauri/AppImage 单软件构建，读 `configs/<id>.yml` | 手动 / 被 Upstream Watch dispatch |
-| **GoNavi Compat Build** | Go/Wails 单软件构建（WebKitGTK 4.0） | 手动 / 被 Upstream Watch dispatch |
-| **ThinkRail Kylin compat** | Electrobun wrapper 重编译 + 打包 | 手动 / 被 Upstream Watch dispatch |
-| **DBX Kylin compat** | MyGO WebKitGTK 4.0 外壳 + 官方静态 `dbx-web-bin` 打包 | 手动 / 被 Upstream Watch dispatch |
-| **Reusable — AppImage** | 给本仓库 `app-build.yml` 或外部仓库复用的 Tauri 构建 | `workflow_call` |
-
-### 自动跟踪是怎么工作的
-
-1. 在 `configs/apps.yml` 注册应用；`configs/<id>.yml` 里写 `workflow:`（默认
-   `app-build.yml`）和 `build_type:`。
-2. 每周一 `upstream-watch.yml` 读取上游 `releases/latest`，把 tag 规范成 `vX.Y.Z`。
-3. 如果本仓库已有 `<id>-<tag>` Release 且**至少有一个资产**，跳过；否则 dispatch
-   对应 workflow，并传入 `version=<tag>`。
-4. `app-build.yml` 额外接收 `app_id`；专用 workflow（GoNavi/ThinkRail/DBX）从自己的
-   `upstream_repo`/config 推导其余参数。
-
-> **为什么旧版看起来失效了**：GitHub 会对 60 天无仓库活动的公开仓库自动禁用
-> `schedule`，原 `compat-build.yml` 和 `gonavi-compat.yml` 都变成了
-> `disabled_inactivity`。本次把入口改名为 `upstream-watch.yml` /
-> `gonavi-build.yml` 以重新激活；如果以后再次被禁用，在 Actions 页面点
-> “Enable workflow” 即可。push 触发的 run 只做 dry-run，不会真的开构建。
-
-## 目录规范
-
-清单与构建资产分开，避免把某个应用的补丁/头文件堆在仓库根部：
-
-```
-configs/<id>.yml          # 清单：上游、镜像、artifact、workflow
-configs/apps.yml          # 注册表：参与自动跟踪的应用
-apps/<id>/                # 仅该应用使用的资产
-├── patches/*.patch       # 按上游版本命名
-├── third_party/**        # vendored 头文件/构建输入
-└── scripts/**            # 可选
-.github/workflows/<id>-compat.yml  # GitHub 要求 workflow 必须在这里
-```
-
-详见 [apps/README.md](apps/README.md)。新增应用不要把文件放回顶层
-`patches/` 或 `third_party/`。
-
-## 快速开始（MyGO Sidecar：dbx）
-
-1. Actions → **DBX Kylin compat** → Run workflow（`version` 留空跟踪最新 Release）
-2. 产物在 Release（tag 如 `dbx-v0.6.70`）
-3. 麒麟实机安装运行：
+1. **XDG 用户态安装器（推荐，如 DBX / ThinkRail）**
+   无需 `root` 权限，自动完成应用目录部署、启动器桌面图标（`~/.local/share/applications/*.desktop`）注册及专属 `uninstall` 卸载脚本生成：
    ```bash
-   tar -xzf DBX-*-linux-<arch>-installer.tar.gz
+   tar -xzf <App>-<version>-linux-<arch>-installer.tar.gz
    ./installer
    ```
-4. 若新增其它 Tauri 2 应用，仍使用 `configs/template.yml` + **Build Compat Image** + **App Build**。
+2. **免安装便携包（`*-kylin.tar.gz` 或单包归档）**
+   解压后直接运行目录内主程序，不写入桌面菜单项：
+   ```bash
+   # DBX
+   tar -xzf DBX-<version>-linux-<arch>-kylin.tar.gz && ./DBX/bin/dbx-desktop
 
-## 新增一个应用
+   # ThinkRail
+   tar -xzf ThinkRail-<version>-linux-<arch>-kylin.tar.gz && ./ThinkRail/bin/launcher
 
-1. 选路径：Tauri → 复制 `configs/template.yml`；Wails → 参考 `configs/gonavi.yml`；
-   Electrobun/预编译树 → 参考 `configs/thinkrail.yml`；MyGO Web Sidecar → 参考 `configs/dbx.yml`。
-2. 在 `configs/apps.yml` 注册（`auto_track: true` 参与每周巡检）。
-3. 应用专属补丁/适配器放 `apps/<id>/`（跨应用复用底座放 `shared/`）。
-4. 跑一次 **Upstream Watch**（可先勾 `dry_run`）确认能发现版本，再手动触发构建。
+   # GoNavi
+   tar -xzf GoNavi-<version>-Linux-<Amd64|Arm64>.tar.gz && ./GoNavi
+   ```
+3. **产物校验**
+   每个 Release 均附带 SHA-256 校验文件，下载后可执行 `sha256sum -c SHA256SUMS-<arch>.txt`（或对应 `.sha256` 文件）核验完整性。
 
-## 定制镜像（仅 Tauri 4.1 路径需要）
+---
 
-Tauri 2.x（wry）要求 `webkit2gtk-4.1`（WebKitGTK ≥ 2.40，libsoup3 API）。
-glibc 2.31 的公共 Debian/Ubuntu 源里没有这个包，因此定制镜像 =
-`debian:bullseye`（glibc 2.31）+ 源码编译 glib 2.72.4 / libsoup 3.2.3 /
-**WebKitGTK 2.44.4**，全部在 CI 完成（`build-image.yml`，双架构原生 runner），
-**无需本地 Docker**。
+## 四条兼容适配路线
 
-> 旧 README 写的 2.40.6 已过时；以 `docker/tauri2-webkit41.Dockerfile` 的
-> 2.44.4 为准。首次构建约 2~3 小时/架构，仅需一次，之后复用 ghcr 镜像。
+并非所有跨平台桌面应用都需要耗时数小时重编整套 WebKitGTK。本仓库按上游架构特征采用最小侵入路径：
 
-## Release 文案模板
+| 适配路线 | 适用场景 | 核心实现机制 | 构建容器基底 | 代表配置与文档 |
+|----------|----------|--------------|--------------|----------------|
+| **MyGO Web Sidecar** | 上游提供纯静态/独立 Web 后端的应用 | `CGO_ENABLED=0` 纯 Go 外壳运行时 `dlopen` 系统 GTK3 + WebKitGTK 4.0；通过 WebKit 引擎代理将固定虚拟源 `http://<app>.localhost/` 路由至随机端口后端（零端口冲突且跨重启完整保留 `localStorage` / `IndexedDB`），前端以 `safari15.4` 目标重编并降级现代 CSS | `ubuntu:20.04` | [`configs/dbx.yml`](configs/dbx.yml)<br>[`apps/dbx/`](apps/dbx/README.md)<br>[`shared/mygo-sidecar/`](shared/mygo-sidecar/README.md) |
+| **Go / Wails v2** | Wails v2 桌面应用 | 清理上游针对 Ubuntu 22.04+ 硬编码的 `webkit2_41` 构建标签，基于 `go.mod` 锁定 Wails CLI 版本直接链接 WebKitGTK 4.0 头文件原生编译 | `ubuntu:20.04` | [`configs/gonavi.yml`](configs/gonavi.yml) |
+| **Electrobun Wrapper** | 发布预编译产物树的 Electrobun 应用 | 保留上游主体产物，仅针对 WebKitGTK 4.0 + `libsoup-2.4` 重编替换 `libNativeWrapper.so`；对前端 Bundle 执行 JSC 2.38 语法转换，并随包附带麒麟缺失的 `libayatana-appindicator3` 运行库 | `ubuntu:20.04` | [`configs/thinkrail.yml`](configs/thinkrail.yml)<br>[`apps/thinkrail/`](apps/thinkrail/README.md) |
+| **Tauri 2 / AppImage** | 强耦合 `wry`（要求 `webkit2gtk-4.1` ≥ 2.40）且无独立 Web 后端的 Tauri 2 应用 | 在 `debian:bullseye`（`glibc 2.31`）基底镜像内预编译 `glib 2.72.4` + `libsoup 3.2.3` + `WebKitGTK 2.44.4` 并缓存至 GHCR，供后续构建直接复用 | `ghcr.io/.../xc-compat-tauri2` | [`configs/template.yml`](configs/template.yml)<br>[`docker/tauri2-webkit41.Dockerfile`](docker/tauri2-webkit41.Dockerfile) |
 
-所有应用共用一套 Release 结构和上游更新记录：
+---
 
-- `release/notes-template.md`：兼容说明、上游 Release Notes、安装、差异、产物、校验；
-- `release/apps/<id>/{install,diff,check}.md`：应用自己的说明，支持 `{{VERSION}}`；
-- `scripts/render-release-notes.py`：渲染模板并附加 provenance 注释。
+## 质量门禁体系
 
-Tauri、Wails、Electrobun 的 release job 都会先 `gh api` 拉取上游 Release 的
-`body`，再渲染同一模板，标题统一为 `<应用> <版本> (Kylin V10 / glibc 2.31)`。
-新增应用只需补 `release/apps/<id>/` 三个 Markdown 文件。
+每次 CI 构建在打包发布前均执行多层硬性校验，任一环节不达标即阻断发布（Fail-Closed）：
 
-## 质量闸门
+- **构建基底预检**：强制校验构建容器 `glibc == 2.31`，防止高版本符号混入。
+- **ELF 符号与依赖审计**：扫描产出的可执行文件与随包 `.so`，确保最高 `GLIBC` 版本需求 ≤ `2.31`；Electrobun 路径额外核对全部官方 C 导出符号及无 `4.1` 专属符号残留；MyGO Sidecar 路径校验外壳零高版本 GLIBC 依赖与后端纯静态零外部动态库。
+- **前端引擎静态门禁（JSC 2.38 / Safari 15.4）**：扫描全部 JS/CSS 产物，拦截会导致 WebKitGTK 2.38 白屏或样式失效的正则后行断言（`(?<=` / `(?<!`）、`class static {}` 块，以及未受 `@supports` 保护的裸 `oklch()`、`color-mix()` 与 `@media` 范围语法。
+- **实机级无头渲染冒烟（UI Smoke）**：在 `ubuntu:20.04` 容器中启动 `xvfb-run` + 真实 `WebKitGTK 4.0 (2.38.x)` 加载应用，校验虚拟源路由、免密会话注入、DOM 挂载元素数、零运行时 JS 异常，并自动导出实机渲染截图留档。
+- **安装器闭环自测**：在隔离 `HOME` 下完整执行静默安装 → 启动探针校验 → 卸载清理验证。
 
-- 预检：容器 glibc ≤ 2.31（超出直接 fail）
-- Tauri 路径：预检 `webkit2gtk-4.1` ≥ 2.40
-- 后检：主程序/捆绑 `.so` 的 GLIBC 符号需求 ≤ 2.31
-- ThinkRail：替换后的 wrapper 校验官方 173 个导出符号、无 4.1-only 符号、
-  `NEEDED` 为 `libwebkit2gtk-4.0.so.37` + `libsoup-2.4.so.1`、GLIBC/GLIBCXX 上限
-- DBX（MyGO Sidecar）：校验 `dbx-desktop` 纯静态无更高版本 GLIBC 符号锁、`dbx-web-bin` 零动态库依赖，执行 `-smoke-test` 登录探针、前端 JSC 2.38 语法与 `--strict-css` 零裸现代 CSS 门禁，以及 `ubuntu:20.04` Xvfb + WebKitGTK 4.0 `-ui-smoke` 实机渲染截图校验
-- 产物附 `.sha256`；Release tag 带 app 前缀，避免多软件重名互覆
+---
 
-## 供其他仓库直接调用
+## 仓库结构与自动化流水线
 
-仅适用于 Tauri/AppImage（请先通过 **Build Compat Image** 构建定制镜像，或填写你自己的兼容镜像地址）：
+### 目录规范
+
+应用声明清单、单应用专属资产与跨应用通用底座严格分层（详见 [`apps/README.md`](apps/README.md)）：
+
+```text
+.
+├── configs/
+│   ├── apps.yml                 # 全局注册表：参与上游版本自动巡检的应用列表
+│   ├── template.yml             # Tauri 2 路线声明模板
+│   └── <id>.yml                 # 单应用配置清单（上游仓库、构建类型、入口 workflow）
+├── shared/
+│   └── mygo-sidecar/            # 跨应用复用的纯 Go WebKitGTK 4.0 桌面外壳与虚拟源网关底座
+├── apps/
+│   └── <id>/                    # 单应用专属适配器、源码/前端补丁、随包头文件与构建脚本
+├── release/
+│   ├── notes-template.md        # 统一 Release Notes 渲染模板
+│   ├── index.json               # 自动生成的按应用分组版本索引（JSON）
+│   └── apps/<id>/               # 单应用 Release 文案片段（install.md / diff.md / check.md）
+├── docker/
+│   └── tauri2-webkit41.Dockerfile # Tauri 2 路线专用的 glibc 2.31 + WebKitGTK 2.44.4 基底镜像
+├── scripts/
+│   ├── render-release-notes.py  # 合并上游更新日志与兼容说明生成 Release 正文
+│   └── build-release-index.py   # 刷新 README 版本表与 release/index.json
+└── .github/workflows/           # CI/CD 巡检、构建、发布与索引同步工作流
+```
+
+### 工作流职责一览
+
+| 工作流文件 | 职责说明 | 触发方式 |
+|------------|----------|----------|
+| `upstream-watch.yml` | 遍历 `configs/apps.yml` 比对上游最新 Release；若本仓尚无对应 `<id>-<tag>` 资产则自动派发构建 | 每周一 `02:00 UTC` / 手动 / `push`（仅 Dry-Run） |
+| `release-index.yml` | 汇总全部 `<id>-v<semver>` Release，自动更新本页版本索引表与 `release/index.json` | 各应用发版后联动调用 / 每日定时 / 手动 |
+| `dbx-compat.yml` | DBX（MyGO Sidecar + 官方静态 `dbx-web-bin` + WebKitGTK 4.0 前端降级与 UI 冒烟）构建发布 | 手动 / Upstream Watch 派发 |
+| `gonavi-build.yml` | GoNavi（Go / Wails v2 + WebKitGTK 4.0）双架构编译发布 | 手动 / Upstream Watch 派发 |
+| `thinkrail-compat.yml` | ThinkRail（Electrobun `libNativeWrapper.so` WebKitGTK 4.0 重编与前端补丁）打包发布 | 手动 / Upstream Watch 派发 |
+| `app-build.yml` | 通用 Tauri 2 应用构建入口，读取 `configs/<id>.yml` 调用复用工作流 | 手动 / Upstream Watch 派发 |
+| `reusable-appimage.yml` | 可供本仓或外部仓库通过 `workflow_call` 复用的 Tauri 2 双架构构建流水线 | `workflow_call` |
+| `build-image.yml` | 双架构原生编译 `tauri2-webkit41` 定制镜像并推送至 GHCR（首次约 2–3 小时/架构，按需复用） | 手动 / Dockerfile 变更 |
+
+### 接入新应用步骤
+
+1. **选择适配路线**：在 `configs/<id>.yml` 创建清单并指定 `workflow:`（Tauri 复制 `configs/template.yml`，Wails / Electrobun / MyGO Sidecar 分别参考 `gonavi.yml` / `thinkrail.yml` / `dbx.yml`）。
+2. **放置专属资产**：应用补丁、脚本或 Sidecar 适配器放入 `apps/<id>/`；跨应用通用能力放入 `shared/`。
+3. **补充发布说明**：在 `release/apps/<id>/` 下提供 `install.md`、`diff.md`、`check.md`（支持 `{{VERSION}}` 占位符，发版时自动拉取上游 Release Notes 合并渲染）。
+4. **注册自动跟踪**：将应用加入 `configs/apps.yml`（`auto_track: true`），先通过 **Upstream Watch**（勾选 `dry_run`）验证版本发现，再触发正式构建。
+
+### 外部仓库复用（Tauri 2 / AppImage）
+
+外部 Tauri 2 仓库可直接调用本仓的可复用工作流（需先准备好兼容基底镜像）：
 
 ```yaml
 jobs:
@@ -180,11 +159,10 @@ jobs:
     secrets: inherit
 ```
 
-## 已知边界
+---
 
-- Tauri 路径依赖定制镜像；镜像首次源码编译约 2~3h/架构
-- Go/Wails 路径直接用 `ubuntu:20.04` + `libwebkit2gtk-4.0-dev`，无需定制镜像
-- Electrobun 路径只替换 `libNativeWrapper.so`；上游自动更新会覆盖它
-- MyGO Sidecar 路径依赖上游提供静态 web 后端，前端以 `safari15.4` 目标重编并将裸 `color-mix()` / `oklch()` / `@media` 范围语法降级为传统语法（保留 `@supports` 渐进增强）以适配系统 WebKitGTK 2.38
-- 四条路径都需要在麒麟实机冒烟一次；GLIBC 扫描不能替代运行时验证
-- 自动巡检使用 GitHub `schedule`；公开仓库 60 天无活动会被禁用，需要重新 Enable
+## 注意事项与已知边界
+
+- **应用内在线自更新**：兼容包针对麒麟底层运行库做了二进制或前端降级适配；若触发上游内置的在线自动更新，可能会被上游原版二进制覆盖（如 Electrobun 的 `libNativeWrapper.so`），建议通过本仓库最新安装包直接覆盖升级。
+- **实机验证原则**：CI 中的 ABI 符号审计与容器 Xvfb 渲染冒烟已覆盖绝大多数启动崩溃与白屏问题，但首次接入新桌面框架时仍建议在麒麟 V10 实机核验输入法、系统托盘与文件对话框交互。
+- **GitHub 定时任务休眠机制**：公开仓库连续 60 天无提交活动时，GitHub 会自动暂停 `schedule` 定时巡检；如遇暂停，在 Actions 页面点击 **Enable workflow** 即可恢复。
