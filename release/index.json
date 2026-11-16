@@ -1,12 +1,18 @@
 {
   "schema": 1,
   "repository": "sondertara/xc-compatible-builds",
-  "latest_release_at": "2026-11-15T11:45:21Z",
+  "latest_release_at": "2026-11-16T09:21:24Z",
   "apps": [
     {
       "id": "dbx",
       "display_name": "DBX",
       "versions": [
+        {
+          "version": "0.6.71",
+          "tag": "dbx-v0.6.71",
+          "published_at": "2026-11-16T09:21:24Z",
+          "release_url": "https://github.com/sondertara/xc-compatible-builds/releases/tag/dbx-v0.6.71"
+        },
         {
           "version": "0.6.70",
           "tag": "dbx-v0.6.70",
@@ -15,15 +21,15 @@
         }
       ],
       "latest": {
-        "version": "0.6.70",
-        "tag": "dbx-v0.6.70",
-        "published_at": "2026-11-15T11:45:21Z",
-        "release_url": "https://github.com/sondertara/xc-compatible-builds/releases/tag/dbx-v0.6.70",
+        "version": "0.6.71",
+        "tag": "dbx-v0.6.71",
+        "published_at": "2026-11-16T09:21:24Z",
+        "release_url": "https://github.com/sondertara/xc-compatible-builds/releases/tag/dbx-v0.6.71",
         "assets": [
-          "DBX-0.6.70-linux-aarch64-installer.tar.gz",
-          "DBX-0.6.70-linux-aarch64-kylin.tar.gz",
-          "DBX-0.6.70-linux-amd64-installer.tar.gz",
-          "DBX-0.6.70-linux-amd64-kylin.tar.gz",
+          "DBX-0.6.71-linux-aarch64-installer.tar.gz",
+          "DBX-0.6.71-linux-aarch64-kylin.tar.gz",
+          "DBX-0.6.71-linux-amd64-installer.tar.gz",
+          "DBX-0.6.71-linux-amd64-kylin.tar.gz",
           "SHA256SUMS-aarch64.txt",
           "SHA256SUMS-amd64.txt"
         ]

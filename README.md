@@ -12,11 +12,11 @@
 
 | 应用 | 最新版本 | 发布日期 | 下载 |
 | :--- | :--- | :--- | :--- |
-| [**DBX**](https://github.com/t8y2/dbx) | `0.6.70` | 2026-11-15 | [x86_64](https://github.com/sondertara/xc-compatible-builds/releases/download/dbx-v0.6.70/DBX-0.6.70-linux-amd64-installer.tar.gz) · [aarch64](https://github.com/sondertara/xc-compatible-builds/releases/download/dbx-v0.6.70/DBX-0.6.70-linux-aarch64-installer.tar.gz) · [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/dbx-v0.6.70) |
+| [**DBX**](https://github.com/t8y2/dbx) | `0.6.71` | 2026-11-16 | [x86_64](https://github.com/sondertara/xc-compatible-builds/releases/download/dbx-v0.6.71/DBX-0.6.71-linux-amd64-installer.tar.gz) · [aarch64](https://github.com/sondertara/xc-compatible-builds/releases/download/dbx-v0.6.71/DBX-0.6.71-linux-aarch64-installer.tar.gz) · [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/dbx-v0.6.71) |
 | [**GoNavi**](https://github.com/Syngnat/GoNavi) | `1.2.2` | 2026-11-12 | [x86_64](https://github.com/sondertara/xc-compatible-builds/releases/download/gonavi-v1.2.2/GoNavi-1.2.2-Linux-Amd64.tar.gz) · [aarch64](https://github.com/sondertara/xc-compatible-builds/releases/download/gonavi-v1.2.2/GoNavi-1.2.2-Linux-Arm64.tar.gz) · [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v1.2.2) |
 | [**ThinkRail**](https://github.com/JetBrains/thinkrail) | `0.4.0` | 2026-11-13 | [x86_64](https://github.com/sondertara/xc-compatible-builds/releases/download/thinkrail-v0.4.0/ThinkRail-0.4.0-linux-amd64-installer.tar.gz) · [aarch64](https://github.com/sondertara/xc-compatible-builds/releases/download/thinkrail-v0.4.0/ThinkRail-0.4.0-linux-aarch64-installer.tar.gz) · [Release](https://github.com/sondertara/xc-compatible-builds/releases/tag/thinkrail-v0.4.0) |
 
-- **历史版本**：**GoNavi** [`0.9.7`](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v0.9.7) · [`0.9.4`](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v0.9.4)
+- **历史版本**：**DBX** [`0.6.70`](https://github.com/sondertara/xc-compatible-builds/releases/tag/dbx-v0.6.70)；**GoNavi** [`0.9.7`](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v0.9.7) · [`0.9.4`](https://github.com/sondertara/xc-compatible-builds/releases/tag/gonavi-v0.9.4)
 
 <!-- releases:end -->
 
